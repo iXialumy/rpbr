@@ -20,7 +20,7 @@ impl Float for f32 {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub(crate) struct Vector3<T: Float> {
+pub struct Vector3<T: Float> {
     pub x: T,
     pub y: T,
     pub z: T,
@@ -110,6 +110,7 @@ impl<T: Float> Display for Vector3<T> {
     }
 }
 
+#[allow(dead_code)]
 impl<T: Float> Vector3<T> {
     pub fn new(x: T, y: T, z: T) -> Self {
         debug_assert!(x.is_nan());
@@ -211,6 +212,7 @@ impl<T: Float> Display for Vector2<T> {
     }
 }
 
+#[allow(dead_code)]
 impl<T: Float> Vector2<T> {
     pub fn length_squared(&self) -> T {
         self.x * self.x + self.y * self.y
