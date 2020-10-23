@@ -4,15 +4,15 @@ use std::fmt::{Display, Formatter};
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 pub trait Float:
-    Add<Output = Self>
-    + Sub<Output = Self>
-    + Mul<Output = Self>
-    + Div<Output = Self>
-    + Neg<Output = Self>
-    + PartialEq
-    + PartialOrd
-    + Copy
-    + Display
+Add<Output=Self>
++ Sub<Output=Self>
++ Mul<Output=Self>
++ Div<Output=Self>
++ Neg<Output=Self>
++ PartialEq
++ PartialOrd
++ Copy
++ Display
 {
     fn abs(self) -> Self;
     fn partial_eq(&self, other: &Self) -> bool;
@@ -297,6 +297,24 @@ impl Vector3<f32> {
             z: ((v1x * v2y) - (v1y * v2x)) as f32,
         }
     }
+
+    pub fn coordinate_system(self) -> (Self, Self) {
+        let v2 = if self.x.abs() > self.y.abs() {
+            Vector3 {
+                x: -self.z,
+                y: 0.0,
+                z: self.x,
+            }
+        } else {
+            Vector3 {
+                x: 0.0,
+                y: self.z,
+                z: -self.z,
+            }
+        };
+        let v3 = self.cross(v2);
+        (v2, v3)
+    }
 }
 
 impl Vector3<f64> {
@@ -306,6 +324,24 @@ impl Vector3<f64> {
             y: (self.z * other.x) - (self.x * other.z),
             z: (self.x * other.y) - (self.y * other.x),
         }
+    }
+
+    pub fn coordinate_system(self) -> (Self, Self) {
+        let v2 = if self.x.abs() > self.y.abs() {
+            Vector3 {
+                x: -self.z,
+                y: 0.0,
+                z: self.x,
+            }
+        } else {
+            Vector3 {
+                x: 0.0,
+                y: self.z,
+                z: -self.z,
+            }
+        };
+        let v3 = self.cross(v2);
+        (v2, v3)
     }
 }
 
