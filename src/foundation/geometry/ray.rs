@@ -38,6 +38,7 @@ impl Ray<f64> {
     }
 }
 
+#[cfg(test)]
 mod tests {
     use crate::foundation::geometry::point::Point3;
     use crate::foundation::geometry::ray::Ray;
