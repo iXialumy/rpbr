@@ -1,5 +1,5 @@
-use std::fmt::Display;
 use std::cmp::Ordering;
+use std::fmt::Display;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 pub trait Float:
@@ -12,6 +12,7 @@ pub trait Float:
     + PartialOrd
     + Copy
     + Display
+    + Num
 {
     fn abs(self) -> Self;
     fn partial_eq(&self, other: &Self) -> bool;
@@ -37,7 +38,6 @@ impl Float for f32 {
         self.is_nan()
     }
 }
-
 impl Float for f64 {
     fn abs(self) -> Self {
         self.abs()
@@ -86,5 +86,126 @@ pub fn min<T: Num>(first: T, second: T) -> T {
         first
     } else {
         second
+    }
+}
+
+impl Num for f32 {
+    fn abs(self) -> Self {
+        self.abs()
+    }
+
+    fn ceil(self) -> Self {
+        self.ceil()
+    }
+
+    fn floor(self) -> Self {
+        self.floor()
+    }
+
+    fn sqrt(self) -> f64 {
+        self.sqrt() as f64
+    }
+}
+impl Num for f64 {
+    fn abs(self) -> Self {
+        self.abs()
+    }
+
+    fn ceil(self) -> Self {
+        self.ceil()
+    }
+
+    fn floor(self) -> Self {
+        self.floor()
+    }
+
+    fn sqrt(self) -> f64 {
+        self.sqrt()
+    }
+}
+
+impl Num for i8 {
+    fn abs(self) -> Self {
+        self.abs()
+    }
+
+    fn ceil(self) -> Self {
+        self
+    }
+
+    fn floor(self) -> Self {
+        self
+    }
+
+    fn sqrt(self) -> f64 {
+        (self as f64).sqrt()
+    }
+}
+impl Num for i16 {
+    fn abs(self) -> Self {
+        self.abs()
+    }
+
+    fn ceil(self) -> Self {
+        self
+    }
+
+    fn floor(self) -> Self {
+        self
+    }
+
+    fn sqrt(self) -> f64 {
+        (self as f64).sqrt()
+    }
+}
+impl Num for i32 {
+    fn abs(self) -> Self {
+        self.abs()
+    }
+
+    fn ceil(self) -> Self {
+        self
+    }
+
+    fn floor(self) -> Self {
+        self
+    }
+
+    fn sqrt(self) -> f64 {
+        (self as f64).sqrt()
+    }
+}
+impl Num for i64 {
+    fn abs(self) -> Self {
+        self.abs()
+    }
+
+    fn ceil(self) -> Self {
+        self
+    }
+
+    fn floor(self) -> Self {
+        self
+    }
+
+    fn sqrt(self) -> f64 {
+        (self as f64).sqrt()
+    }
+}
+impl Num for i128 {
+    fn abs(self) -> Self {
+        self.abs()
+    }
+
+    fn ceil(self) -> Self {
+        self
+    }
+
+    fn floor(self) -> Self {
+        self
+    }
+
+    fn sqrt(self) -> f64 {
+        (self as f64).sqrt()
     }
 }

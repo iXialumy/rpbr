@@ -1,17 +1,31 @@
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 
-use crate::foundation::geometry::traits::{Num,min,max};
+use crate::foundation::geometry::traits::{max, min, Float, Num};
+use crate::foundation::geometry::vector::Vector3;
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Point3<T: Num> {
-    x: T,
-    y: T,
-    z: T,
+    pub x: T,
+    pub y: T,
+    pub z: T,
 }
 
 impl<T: Num> Add for Point3<T> {
     type Output = Self;
 
     fn add(self, other: Self) -> Self {
+        Self {
+            x: self.x + other.x,
+            y: self.y + other.y,
+            z: self.z + other.z,
+        }
+    }
+}
+
+impl<T: Float> Add<Vector3<T>> for Point3<T> {
+    type Output = Self;
+
+    fn add(self, other: Vector3<T>) -> Self {
         Self {
             x: self.x + other.x,
             y: self.y + other.y,
@@ -82,6 +96,26 @@ impl<T: Num> Point3<T> {
             x: max(self.x, other.x),
             y: max(self.y, other.y),
             z: max(self.z, other.z),
+        }
+    }
+}
+
+impl Point3<f32> {
+    pub fn new() -> Self {
+        Point3 {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        }
+    }
+}
+
+impl Point3<f64> {
+    pub fn new() -> Self {
+        Point3 {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
         }
     }
 }

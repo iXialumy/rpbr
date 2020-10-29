@@ -9,5 +9,5 @@ fn main() {
         z: 2.0,
     };
     println!("{}", vector);
-    println!("{}", vector.length_squared())
+    println!("{}", vector.length_squared());
 }

@@ -1,3 +1,5 @@
+pub mod normal;
 pub mod point;
-pub mod vector;
+pub mod ray;
 pub mod traits;
+pub mod vector;

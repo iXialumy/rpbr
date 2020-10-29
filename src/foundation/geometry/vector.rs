@@ -1,7 +1,7 @@
+use crate::foundation::geometry::traits::Float;
 use core::fmt;
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
-use crate::foundation::geometry::traits::Float;
 
 pub fn max<T: Float>(first: T, second: T) -> T {
     if first < second {
@@ -11,7 +11,7 @@ pub fn max<T: Float>(first: T, second: T) -> T {
     }
 }
 
-pub fn min<T: Float>(first: T, second: T) -> T  {
+pub fn min<T: Float>(first: T, second: T) -> T {
     if first < second {
         first
     } else {
@@ -147,14 +147,14 @@ impl<T: Float> Vector3<T> {
     }
 
     pub fn length(self) -> T {
-        self.length_squared().sqrt()
+        Float::sqrt(self.length_squared())
     }
 
     pub fn abs(self) -> Self {
         Self {
-            x: self.x.abs(),
-            y: self.y.abs(),
-            z: self.z.abs(),
+            x: Float::abs(self.x),
+            y: Float::abs(self.y),
+            z: Float::abs(self.z),
         }
     }
 
@@ -163,7 +163,7 @@ impl<T: Float> Vector3<T> {
     }
 
     pub fn abs_dot(&self, other: Self) -> T {
-        self.dot(other).abs()
+        Float::abs(self.dot(other))
     }
 
     pub fn normalize(self) -> Self {
@@ -229,6 +229,14 @@ impl<T: Float> Vector3<T> {
 }
 
 impl Vector3<f32> {
+    pub fn empty() -> Self {
+        Self {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        }
+    }
+
     pub fn cross(&self, other: Self) -> Self {
         let v1x = self.x as f64;
         let v2x = other.x as f64;
@@ -264,6 +272,14 @@ impl Vector3<f32> {
 }
 
 impl Vector3<f64> {
+    pub fn empty() -> Self {
+        Self {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+        }
+    }
+
     pub fn cross(&self, other: Self) -> Self {
         Self {
             x: (self.y * other.z) - (self.z * other.y),
@@ -401,13 +417,13 @@ impl<T: Float> Vector2<T> {
     }
 
     pub fn length(&self) -> T {
-        self.length_squared().sqrt()
+        Float::sqrt(self.length_squared())
     }
 
     pub fn abs(self) -> Self {
         Self {
-            x: self.x.abs(),
-            y: self.y.abs(),
+            x: Float::abs(self.x),
+            y: Float::abs(self.y),
         }
     }
 
@@ -416,7 +432,7 @@ impl<T: Float> Vector2<T> {
     }
 
     pub fn abs_dot(&self, other: Self) -> T {
-        self.dot(other).abs()
+        Float::abs(self.dot(other))
     }
 
     pub fn normalize(self) -> Self {
