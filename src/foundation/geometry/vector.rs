@@ -1,7 +1,8 @@
-use crate::foundation::geometry::traits::Float;
-use core::fmt;
-use std::fmt::{Display, Formatter};
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+
+use num_traits::Float;
+
+use crate::foundation::geometry::point::Point3;
 
 pub fn max<T: Float>(first: T, second: T) -> T {
     if first < second {
@@ -126,9 +127,19 @@ impl<T: Float> Neg for Vector3<T> {
     }
 }
 
-impl<T: Float> Display for Vector3<T> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "x: {}, y: {}, z: {}", self.x, self.y, self.z)
+// impl<T: Float> Display for Vector3<T> {
+//     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+//         write!(f, "x: {}, y: {}, z: {}", self.x, self.y, self.z)
+//     }
+// }
+
+impl<T: Float> From<Point3<T>> for Vector3<T> {
+    fn from(point: Point3<T>) -> Self {
+        Self {
+            x: point.x,
+            y: point.y,
+            z: point.z,
+        }
     }
 }
 
@@ -404,11 +415,11 @@ impl<T: Float> Neg for Vector2<T> {
     }
 }
 
-impl<T: Float> Display for Vector2<T> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        write!(f, "x: {}, y: {}", self.x, self.y)
-    }
-}
+// impl<T: Float> Display for Vector2<T> {
+//     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+//         write!(f, "x: {}, y: {}", self.x, self.y)
+//     }
+// }
 
 #[allow(dead_code)]
 impl<T: Float> Vector2<T> {

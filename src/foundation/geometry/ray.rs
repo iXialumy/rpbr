@@ -1,6 +1,6 @@
 use crate::foundation::geometry::point::Point3;
-use crate::foundation::geometry::traits::Float;
 use crate::foundation::geometry::vector::Vector3;
+use num_traits::Float;
 
 pub struct Ray<T: Float> {
     pub origin: Point3<T>,

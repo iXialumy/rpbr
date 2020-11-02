@@ -8,6 +8,6 @@ fn main() {
         y: 1.0,
         z: 2.0,
     };
-    println!("{}", vector);
+    // println!("{}", vector);
     println!("{}", vector.length_squared());
 }
