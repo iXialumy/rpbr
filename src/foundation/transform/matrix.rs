@@ -3,7 +3,7 @@ use std::ptr::swap;
 
 use num_traits::{Float, FromPrimitive};
 
-struct Matrix4x4<T: Float + FromPrimitive> {
+pub struct Matrix4x4<T: Float + FromPrimitive> {
     m: [[T; 4]; 4],
 }
 
