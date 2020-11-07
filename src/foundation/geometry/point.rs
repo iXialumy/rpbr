@@ -1,4 +1,3 @@
-use std::cmp::{max, min};
 use std::ops::{Add, AddAssign, Index, Sub, SubAssign};
 
 use num_traits::{Float, FromPrimitive};
