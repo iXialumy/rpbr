@@ -8,6 +8,40 @@ struct Matrix4x4<T: Float + FromPrimitive> {
 }
 
 impl<T: Float + FromPrimitive> Matrix4x4<T> {
+    /// Create a matrix from 16 Floats
+    pub fn matrix_from_floats(
+        t00: T,
+        t01: T,
+        t02: T,
+        t03: T,
+        t10: T,
+        t11: T,
+        t12: T,
+        t13: T,
+        t20: T,
+        t21: T,
+        t22: T,
+        t23: T,
+        t30: T,
+        t31: T,
+        t32: T,
+        t33: T,
+    ) -> Self {
+        Self {
+            m: [
+                [t00, t01, t02, t03],
+                [t10, t11, t12, t13],
+                [t20, t21, t22, t23],
+                [t30, t31, t32, t33],
+            ],
+        }
+    }
+
+    /// Create a matrix from a 2d array
+    pub fn matrix(array: [[T; 4]; 4]) -> Self {
+        Self { m: array }
+    }
+
     /// Initializes a new identity matrix
     pub fn identity() -> Self {
         Self {
