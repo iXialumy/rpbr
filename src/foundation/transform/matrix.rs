@@ -3,7 +3,7 @@ use std::ptr::swap;
 
 use num_traits::{Float, FromPrimitive};
 
-#[derive(Copy, Clone, PartialOrd, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
 pub struct Matrix4x4<T: Float + FromPrimitive> {
     pub m: [[T; 4]; 4],
 }
@@ -181,5 +181,24 @@ impl<T: Float + FromPrimitive> Mul for Matrix4x4<T> {
 impl<T: Float + FromPrimitive> From<[[T; 4]; 4]> for Matrix4x4<T> {
     fn from(array: [[T; 4]; 4]) -> Self {
         Self { m: array }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::foundation::transform::matrix::Matrix4x4;
+
+    #[test]
+    pub fn invert_matrix() {
+        let matrix = Matrix4x4 {
+            m: [
+                [2.0, -1.0, 0.0, 0.0],
+                [1.0, 2.0, -2.0, 0.0],
+                [0.0, -1.0, 1.0, 0.0],
+                [0.0, 0.0, 0.0, 1.0],
+            ],
+        };
+
+        assert_eq!(matrix * matrix.inverse(), Matrix4x4::identity());
     }
 }
