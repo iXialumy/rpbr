@@ -3,8 +3,9 @@ use std::ptr::swap;
 
 use num_traits::{Float, FromPrimitive};
 
+#[derive(Copy, Clone, PartialOrd, PartialEq)]
 pub struct Matrix4x4<T: Float + FromPrimitive> {
-    m: [[T; 4]; 4],
+    pub m: [[T; 4]; 4],
 }
 
 impl<T: Float + FromPrimitive> Matrix4x4<T> {
@@ -35,11 +36,6 @@ impl<T: Float + FromPrimitive> Matrix4x4<T> {
                 [t30, t31, t32, t33],
             ],
         }
-    }
-
-    /// Create a matrix from a 2d array
-    pub fn matrix(array: [[T; 4]; 4]) -> Self {
-        Self { m: array }
     }
 
     /// Initializes a new identity matrix
@@ -178,6 +174,12 @@ impl<T: Float + FromPrimitive> Mul for Matrix4x4<T> {
                     + self.m[i][3] * rhs.m[3][j];
             }
         }
+        Self { m: array }
+    }
+}
+
+impl<T: Float + FromPrimitive> From<[[T; 4]; 4]> for Matrix4x4<T> {
+    fn from(array: [[T; 4]; 4]) -> Self {
         Self { m: array }
     }
 }
