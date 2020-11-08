@@ -113,13 +113,12 @@ impl<T: Float + FromPrimitive> Matrix4x4<T> {
             ipiv[icol] += 1;
 
             // Swap rows irow and icol for pivot
-            unsafe {
-                if irow != icol {
-                    for k in 0..4 {
-                        swap(&mut minv[irow][k], &mut minv[icol][k])
-                    }
+            if irow != icol {
+                for k in 0..4 {
+                    unsafe { swap(&mut minv[irow][k], &mut minv[icol][k]) }
                 }
             }
+
             indxr[i] = irow as i32;
             indxc[i] = icol as i32;
             if minv[icol][icol] == T::from_f64(0.0).unwrap() {
@@ -128,6 +127,7 @@ impl<T: Float + FromPrimitive> Matrix4x4<T> {
 
             // Set self.m[icol][icol] to one by scaling row icol appropriately
             let pivinv = T::from_f64(1.0).unwrap() / minv[icol][icol];
+            minv[icol][icol] = T::from_f64(1.0).unwrap();
             for j in 0..4 {
                 minv[icol][j] = minv[icol][j] * pivinv;
             }
@@ -144,10 +144,11 @@ impl<T: Float + FromPrimitive> Matrix4x4<T> {
             }
         }
         // Swap columns to reflect permutation
-        unsafe {
-            for j in 3..=0 {
-                if indxr[j] != indxc[j] {
-                    for k in 0..4 {
+
+        for j in (0..4).rev() {
+            if indxr[j] != indxc[j] {
+                for k in 0..4 {
+                    unsafe {
                         swap(
                             &mut minv[k][indxr[j] as usize],
                             &mut minv[k][indxc[j] as usize],
