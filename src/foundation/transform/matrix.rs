@@ -202,4 +202,27 @@ mod tests {
 
         assert_eq!(matrix * matrix.inverse(), Matrix4x4::identity());
     }
+
+    #[test]
+    pub fn transpose_matrix() {
+        let matrix = Matrix4x4 {
+            m: [
+                [2.0, -1.0, 0.0, 0.0],
+                [1.0, 2.0, -2.0, 0.0],
+                [0.0, -1.0, 1.0, 0.0],
+                [0.0, 0.0, 0.0, 1.0],
+            ],
+        };
+
+        let expected = Matrix4x4 {
+            m: [
+                [2.0, 1.0, 0.0, 0.0],
+                [-1.0, 2.0, -1.0, 0.0],
+                [0.0, -2.0, 1.0, 0.0],
+                [0.0, 0.0, 0.0, 1.0],
+            ],
+        };
+
+        assert_eq!(matrix.transpose(), expected);
+    }
 }
