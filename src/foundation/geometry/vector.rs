@@ -1,10 +1,10 @@
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
-use num_traits::Float;
+use num_traits::{AsPrimitive, Float, FromPrimitive};
 
 use crate::foundation::geometry::point::Point3;
 
-pub fn max<T: Float>(first: T, second: T) -> T {
+pub fn max<T: Float + FromPrimitive + AsPrimitive<f64>>(first: T, second: T) -> T {
     if first < second {
         second
     } else {
@@ -12,7 +12,7 @@ pub fn max<T: Float>(first: T, second: T) -> T {
     }
 }
 
-pub fn min<T: Float>(first: T, second: T) -> T {
+pub fn min<T: Float + FromPrimitive + AsPrimitive<f64>>(first: T, second: T) -> T {
     if first < second {
         first
     } else {
@@ -21,13 +21,13 @@ pub fn min<T: Float>(first: T, second: T) -> T {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub struct Vector3<T: Float> {
+pub struct Vector3<T: Float + FromPrimitive + AsPrimitive<f64>> {
     pub x: T,
     pub y: T,
     pub z: T,
 }
 
-impl<T: Float> Add for Vector3<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> Add for Vector3<T> {
     type Output = Self;
 
     fn add(self, other: Self) -> Self {
@@ -39,7 +39,7 @@ impl<T: Float> Add for Vector3<T> {
     }
 }
 
-impl<T: Float> AddAssign for Vector3<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> AddAssign for Vector3<T> {
     fn add_assign(&mut self, other: Self) {
         *self = Self {
             x: self.x + other.x,
@@ -49,7 +49,7 @@ impl<T: Float> AddAssign for Vector3<T> {
     }
 }
 
-impl<T: Float> Sub for Vector3<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> Sub for Vector3<T> {
     type Output = Self;
 
     fn sub(self, other: Self) -> Self {
@@ -61,7 +61,7 @@ impl<T: Float> Sub for Vector3<T> {
     }
 }
 
-impl<T: Float> SubAssign for Vector3<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> SubAssign for Vector3<T> {
     fn sub_assign(&mut self, other: Self) {
         *self = Self {
             x: self.x - other.x,
@@ -71,7 +71,7 @@ impl<T: Float> SubAssign for Vector3<T> {
     }
 }
 
-impl<T: Float> Mul<T> for Vector3<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> Mul<T> for Vector3<T> {
     type Output = Self;
 
     fn mul(self, other: T) -> Self {
@@ -83,7 +83,7 @@ impl<T: Float> Mul<T> for Vector3<T> {
     }
 }
 
-impl<T: Float> MulAssign<T> for Vector3<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> MulAssign<T> for Vector3<T> {
     fn mul_assign(&mut self, other: T) {
         *self = Self {
             x: self.x * other,
@@ -93,7 +93,7 @@ impl<T: Float> MulAssign<T> for Vector3<T> {
     }
 }
 
-impl<T: Float> Div<T> for Vector3<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> Div<T> for Vector3<T> {
     type Output = Self;
 
     fn div(self, other: T) -> Self {
@@ -105,7 +105,7 @@ impl<T: Float> Div<T> for Vector3<T> {
     }
 }
 
-impl<T: Float> DivAssign<T> for Vector3<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> DivAssign<T> for Vector3<T> {
     fn div_assign(&mut self, rhs: T) {
         *self = Self {
             x: self.x / rhs,
@@ -115,7 +115,7 @@ impl<T: Float> DivAssign<T> for Vector3<T> {
     }
 }
 
-impl<T: Float> Neg for Vector3<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> Neg for Vector3<T> {
     type Output = Self;
 
     fn neg(self) -> Self {
@@ -127,13 +127,13 @@ impl<T: Float> Neg for Vector3<T> {
     }
 }
 
-// impl<T: Float> Display for Vector3<T> {
+// impl<T: Float + FromPrimitive + AsPrimitive<f64>> Display for Vector3<T> {
 //     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
 //         write!(f, "x: {}, y: {}, z: {}", self.x, self.y, self.z)
 //     }
 // }
 
-impl<T: Float> From<Point3<T>> for Vector3<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> From<Point3<T>> for Vector3<T> {
     fn from(point: Point3<T>) -> Self {
         Self {
             x: point.x,
@@ -144,7 +144,7 @@ impl<T: Float> From<Point3<T>> for Vector3<T> {
 }
 
 #[allow(dead_code)]
-impl<T: Float> Vector3<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> Vector3<T> {
     pub fn new(x: T, y: T, z: T) -> Self {
         debug_assert!(x.is_nan());
         debug_assert!(y.is_nan());
@@ -237,6 +237,21 @@ impl<T: Float> Vector3<T> {
             z: max(self.z, other.z),
         }
     }
+
+    pub fn cross(&self, other: Self) -> Self {
+        let v1x: f64 = (self.x).as_();
+        let v2x: f64 = other.x.as_();
+        let v1y: f64 = self.y.as_();
+        let v2y: f64 = other.y.as_();
+        let v1z: f64 = self.z.as_();
+        let v2z: f64 = other.z.as_();
+
+        Vector3 {
+            x: T::from_f64((v1y * v2z) - (v1z * v2y)).unwrap(),
+            y: T::from_f64((v1z * v2x) - (v1x * v2z)).unwrap(),
+            z: T::from_f64((v1x * v2y) - (v1y * v2x)).unwrap(),
+        }
+    }
 }
 
 impl Vector3<f32> {
@@ -245,21 +260,6 @@ impl Vector3<f32> {
             x: 0.0,
             y: 0.0,
             z: 0.0,
-        }
-    }
-
-    pub fn cross(&self, other: Self) -> Self {
-        let v1x = self.x as f64;
-        let v2x = other.x as f64;
-        let v1y = self.y as f64;
-        let v2y = other.y as f64;
-        let v1z = self.z as f64;
-        let v2z = other.z as f64;
-
-        Vector3 {
-            x: ((v1y * v2z) - (v1z * v2y)) as f32,
-            y: ((v1z * v2x) - (v1x * v2z)) as f32,
-            z: ((v1x * v2y) - (v1y * v2x)) as f32,
         }
     }
 
@@ -291,13 +291,13 @@ impl Vector3<f64> {
         }
     }
 
-    pub fn cross(&self, other: Self) -> Self {
-        Self {
-            x: (self.y * other.z) - (self.z * other.y),
-            y: (self.z * other.x) - (self.x * other.z),
-            z: (self.x * other.y) - (self.y * other.x),
-        }
-    }
+    // pub fn cross(&self, other: Self) -> Self {
+    //     Self {
+    //         x: (self.y * other.z) - (self.z * other.y),
+    //         y: (self.z * other.x) - (self.x * other.z),
+    //         z: (self.x * other.y) - (self.y * other.x),
+    //     }
+    // }
 
     pub fn coordinate_system(self) -> (Self, Self) {
         let v2 = if self.x.abs() > self.y.abs() {
@@ -319,12 +319,12 @@ impl Vector3<f64> {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub(crate) struct Vector2<T: Float> {
+pub(crate) struct Vector2<T: Float + FromPrimitive + AsPrimitive<f64>> {
     pub x: T,
     pub y: T,
 }
 
-impl<T: Float> Add for Vector2<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> Add for Vector2<T> {
     type Output = Self;
 
     fn add(self, other: Self) -> Self {
@@ -335,7 +335,7 @@ impl<T: Float> Add for Vector2<T> {
     }
 }
 
-impl<T: Float> AddAssign for Vector2<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> AddAssign for Vector2<T> {
     fn add_assign(&mut self, other: Self) {
         *self = Self {
             x: self.x + other.x,
@@ -344,7 +344,7 @@ impl<T: Float> AddAssign for Vector2<T> {
     }
 }
 
-impl<T: Float> Sub for Vector2<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> Sub for Vector2<T> {
     type Output = Self;
 
     fn sub(self, other: Self) -> Self {
@@ -355,7 +355,7 @@ impl<T: Float> Sub for Vector2<T> {
     }
 }
 
-impl<T: Float> SubAssign for Vector2<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> SubAssign for Vector2<T> {
     fn sub_assign(&mut self, other: Self) {
         *self = Self {
             x: self.x - other.x,
@@ -364,7 +364,7 @@ impl<T: Float> SubAssign for Vector2<T> {
     }
 }
 
-impl<T: Float> Mul<T> for Vector2<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> Mul<T> for Vector2<T> {
     type Output = Self;
 
     fn mul(self, other: T) -> Self {
@@ -375,7 +375,7 @@ impl<T: Float> Mul<T> for Vector2<T> {
     }
 }
 
-impl<T: Float> MulAssign<T> for Vector2<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> MulAssign<T> for Vector2<T> {
     fn mul_assign(&mut self, other: T) {
         *self = Self {
             x: self.x * other,
@@ -384,7 +384,7 @@ impl<T: Float> MulAssign<T> for Vector2<T> {
     }
 }
 
-impl<T: Float> Div<T> for Vector2<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> Div<T> for Vector2<T> {
     type Output = Self;
 
     fn div(self, other: T) -> Self {
@@ -395,7 +395,7 @@ impl<T: Float> Div<T> for Vector2<T> {
     }
 }
 
-impl<T: Float> DivAssign<T> for Vector2<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> DivAssign<T> for Vector2<T> {
     fn div_assign(&mut self, rhs: T) {
         *self = Self {
             x: self.x / rhs,
@@ -404,7 +404,7 @@ impl<T: Float> DivAssign<T> for Vector2<T> {
     }
 }
 
-impl<T: Float> Neg for Vector2<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> Neg for Vector2<T> {
     type Output = Self;
 
     fn neg(self) -> Self {
@@ -415,14 +415,14 @@ impl<T: Float> Neg for Vector2<T> {
     }
 }
 
-// impl<T: Float> Display for Vector2<T> {
+// impl<T: Float + FromPrimitive + AsPrimitive<f64>> Display for Vector2<T> {
 //     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
 //         write!(f, "x: {}, y: {}", self.x, self.y)
 //     }
 // }
 
 #[allow(dead_code)]
-impl<T: Float> Vector2<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> Vector2<T> {
     pub fn length_squared(&self) -> T {
         self.x * self.x + self.y * self.y
     }

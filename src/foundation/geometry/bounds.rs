@@ -1,17 +1,17 @@
 use std::ops::Index;
 
-use num_traits::Float;
+use num_traits::{AsPrimitive, Float, FromPrimitive};
 
 use crate::foundation::geometry::point::Point3;
 use crate::foundation::geometry::vector::Vector3;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub struct Bounds3<T: Float> {
+pub struct Bounds3<T: Float + FromPrimitive + AsPrimitive<f64>> {
     p_min: Point3<T>,
     p_max: Point3<T>,
 }
 
-impl<T: Float> Index<i32> for Bounds3<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> Index<i32> for Bounds3<T> {
     type Output = Point3<T>;
 
     fn index(&self, index: i32) -> &Self::Output {
@@ -23,7 +23,7 @@ impl<T: Float> Index<i32> for Bounds3<T> {
     }
 }
 
-impl<T: Float> Bounds3<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> Bounds3<T> {
     pub fn new(p1: Point3<T>, p2: Point3<T>) -> Self {
         Self {
             p_min: Point3 {
@@ -92,13 +92,13 @@ impl<T: Float> Bounds3<T> {
     pub fn expand(self, delta: T) -> Self {
         Self {
             p_min: self.p_min
-                - Point3 {
+                - Vector3 {
                     x: delta,
                     y: delta,
                     z: delta,
                 },
             p_max: self.p_max
-                + Point3 {
+                + Vector3 {
                     x: delta,
                     y: delta,
                     z: delta,
@@ -107,7 +107,7 @@ impl<T: Float> Bounds3<T> {
     }
 }
 
-impl<T: Float> Bounds3<T> {
+impl<T: Float + AsPrimitive<f64> + FromPrimitive> Bounds3<T> {
     pub fn diagonal(self) -> Vector3<T> {
         (self.p_max - self.p_min).into()
     }

@@ -1,17 +1,17 @@
-use std::ops::{Add, AddAssign, Index, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Div, Index, Sub, SubAssign};
 
-use num_traits::{Float, FromPrimitive};
+use num_traits::{AsPrimitive, Float, FromPrimitive};
 
 use crate::foundation::geometry::vector::Vector3;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub struct Point3<T: Float> {
+pub struct Point3<T: Float + FromPrimitive + AsPrimitive<f64>> {
     pub x: T,
     pub y: T,
     pub z: T,
 }
 
-impl<T: Float> Add for Point3<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> Add for Point3<T> {
     type Output = Self;
 
     fn add(self, other: Self) -> Self {
@@ -23,7 +23,7 @@ impl<T: Float> Add for Point3<T> {
     }
 }
 
-impl<T: Float> Add<Vector3<T>> for Point3<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> Add<Vector3<T>> for Point3<T> {
     type Output = Self;
 
     fn add(self, other: Vector3<T>) -> Self {
@@ -35,21 +35,11 @@ impl<T: Float> Add<Vector3<T>> for Point3<T> {
     }
 }
 
-// impl<T: Float> AddAssign for Point3<T> {
-//     fn add_assign(&mut self, other: Self) {
-//         *self = Self {
-//             x: self.x + other.x,
-//             y: self.y + other.y,
-//             z: self.z + other.z,
-//         }
-//     }
-// }
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> Sub for Point3<T> {
+    type Output = Vector3<T>;
 
-impl<T: Float> Sub for Point3<T> {
-    type Output = Self;
-
-    fn sub(self, other: Self) -> Self {
-        Self {
+    fn sub(self, other: Self) -> Self::Output {
+        Vector3 {
             x: self.x - other.x,
             y: self.y - other.y,
             z: self.z - other.z,
@@ -57,17 +47,19 @@ impl<T: Float> Sub for Point3<T> {
     }
 }
 
-// impl<T: Float> SubAssign for Point3<T> {
-//     fn sub_assign(&mut self, other: Self) {
-//         *self = Self {
-//             x: self.x - other.x,
-//             y: self.y - other.y,
-//             z: self.z - other.z,
-//         }
-//     }
-// }
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> Sub<Vector3<T>> for Point3<T> {
+    type Output = Point3<T>;
 
-impl<T: Float> Index<i32> for Point3<T> {
+    fn sub(self, other: Vector3<T>) -> Self::Output {
+        Point3 {
+            x: self.x - other.x,
+            y: self.y - other.y,
+            z: self.z - other.z,
+        }
+    }
+}
+
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> Index<i32> for Point3<T> {
     type Output = T;
 
     fn index(&self, index: i32) -> &Self::Output {
@@ -80,7 +72,19 @@ impl<T: Float> Index<i32> for Point3<T> {
     }
 }
 
-impl<T: Float> Point3<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> Div<T> for Point3<T> {
+    type Output = Self;
+
+    fn div(self, rhs: T) -> Self::Output {
+        Self {
+            x: self.x / rhs,
+            y: self.y / rhs,
+            z: self.z / rhs,
+        }
+    }
+}
+
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> Point3<T> {
     pub fn length_squared(self) -> T {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
@@ -113,6 +117,10 @@ impl<T: Float> Point3<T> {
         }
     }
 
+    pub fn normalize(&self) -> Self {
+        *self / self.length()
+    }
+
     // pub fn lerp(self) ->
 }
 
@@ -136,12 +144,12 @@ impl Point3<f64> {
     }
 }
 
-pub struct Point2<T: Float> {
+pub struct Point2<T: Float + FromPrimitive + AsPrimitive<f64>> {
     x: T,
     y: T,
 }
 
-impl<T: Float> Add for Point2<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> Add for Point2<T> {
     type Output = Self;
 
     fn add(self, other: Self) -> Self {
@@ -152,7 +160,7 @@ impl<T: Float> Add for Point2<T> {
     }
 }
 
-impl<T: Float> AddAssign for Point2<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> AddAssign for Point2<T> {
     fn add_assign(&mut self, other: Self) {
         *self = Self {
             x: self.x + other.x,
@@ -161,7 +169,7 @@ impl<T: Float> AddAssign for Point2<T> {
     }
 }
 
-impl<T: Float> Sub for Point2<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> Sub for Point2<T> {
     type Output = Self;
 
     fn sub(self, other: Self) -> Self {
@@ -172,7 +180,7 @@ impl<T: Float> Sub for Point2<T> {
     }
 }
 
-impl<T: Float> SubAssign for Point2<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> SubAssign for Point2<T> {
     fn sub_assign(&mut self, other: Self) {
         *self = Self {
             x: self.x - other.x,
@@ -181,7 +189,7 @@ impl<T: Float> SubAssign for Point2<T> {
     }
 }
 
-impl<T: Float> Point2<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> Point2<T> {
     pub fn length_squared(self) -> T {
         self.x * self.x + self.y * self.y
     }
@@ -213,7 +221,7 @@ impl<T: Float> Point2<T> {
     }
 }
 
-impl<T: Float> Index<i32> for Point2<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> Index<i32> for Point2<T> {
     type Output = T;
 
     fn index(&self, index: i32) -> &Self::Output {
