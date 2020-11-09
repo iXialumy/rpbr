@@ -3,7 +3,7 @@ use crate::foundation::transform::matrix::Matrix4x4;
 use num_traits::{Float, FromPrimitive};
 use std::cmp::Ordering;
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Transform<T: Float + FromPrimitive> {
     pub matrix: Matrix4x4<T>,
     pub inverse: Matrix4x4<T>,
@@ -230,5 +230,38 @@ impl<T: Float + FromPrimitive> PartialOrd for Transform<T> {
             }
         }
         Some(Ordering::Equal)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::foundation::transform::matrix::Matrix4x4;
+    use crate::foundation::transform::transform::Transform;
+
+    #[test]
+    pub fn new() {
+        let matrix = Matrix4x4 {
+            m: [
+                [2.0, -1.0, 0.0, 0.0],
+                [1.0, 2.0, -2.0, 0.0],
+                [0.0, -1.0, 1.0, 0.0],
+                [0.0, 0.0, 0.0, 1.0],
+            ],
+        };
+
+        let inverse = Matrix4x4 {
+            m: [
+                [0.0, 1.0, 2.0, 0.0],
+                [-1.0, 2.0, 4.0, 0.0],
+                [-1.0, 2.0, 5.0, 0.0],
+                [0.0, 0.0, 0.0, 1.0],
+            ],
+        };
+
+        let actual = Transform::new(matrix);
+
+        let expected = Transform { matrix, inverse };
+
+        assert_eq!(expected, actual);
     }
 }
