@@ -21,7 +21,7 @@ pub fn min<T: Float + FromPrimitive + AsPrimitive<f64>>(first: T, second: T) -> 
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub struct Vector3<T: Float + FromPrimitive + AsPrimitive<f64>> {
+pub struct Vector3<T: Float + FromPrimitive + AsPrimitive<f64> + Copy> {
     pub x: T,
     pub y: T,
     pub z: T,
@@ -127,12 +127,6 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64>> Neg for Vector3<T> {
     }
 }
 
-// impl<T: Float + FromPrimitive + AsPrimitive<f64>> Display for Vector3<T> {
-//     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-//         write!(f, "x: {}, y: {}, z: {}", self.x, self.y, self.z)
-//     }
-// }
-
 impl<T: Float + FromPrimitive + AsPrimitive<f64>> From<Point3<T>> for Vector3<T> {
     fn from(point: Point3<T>) -> Self {
         Self {
@@ -151,6 +145,14 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64>> Vector3<T> {
         debug_assert!(z.is_nan());
 
         Self { x, y, z }
+    }
+
+    pub fn empty() -> Self {
+        Self {
+            x: T::from_f64(0.0).unwrap(),
+            y: T::from_f64(0.0).unwrap(),
+            z: T::from_f64(0.0).unwrap(),
+        }
     }
 
     pub fn length_squared(self) -> T {
@@ -254,70 +256,6 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64>> Vector3<T> {
     }
 }
 
-impl Vector3<f32> {
-    pub fn empty() -> Self {
-        Self {
-            x: 0.0,
-            y: 0.0,
-            z: 0.0,
-        }
-    }
-
-    pub fn coordinate_system(self) -> (Self, Self) {
-        let v2 = if self.x.abs() > self.y.abs() {
-            Vector3 {
-                x: -self.z,
-                y: 0.0,
-                z: self.x,
-            }
-        } else {
-            Vector3 {
-                x: 0.0,
-                y: self.z,
-                z: -self.z,
-            }
-        };
-        let v3 = self.cross(v2);
-        (v2, v3)
-    }
-}
-
-impl Vector3<f64> {
-    pub fn empty() -> Self {
-        Self {
-            x: 0.0,
-            y: 0.0,
-            z: 0.0,
-        }
-    }
-
-    // pub fn cross(&self, other: Self) -> Self {
-    //     Self {
-    //         x: (self.y * other.z) - (self.z * other.y),
-    //         y: (self.z * other.x) - (self.x * other.z),
-    //         z: (self.x * other.y) - (self.y * other.x),
-    //     }
-    // }
-
-    pub fn coordinate_system(self) -> (Self, Self) {
-        let v2 = if self.x.abs() > self.y.abs() {
-            Vector3 {
-                x: -self.z,
-                y: 0.0,
-                z: self.x,
-            }
-        } else {
-            Vector3 {
-                x: 0.0,
-                y: self.z,
-                z: -self.z,
-            }
-        };
-        let v3 = self.cross(v2);
-        (v2, v3)
-    }
-}
-
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub(crate) struct Vector2<T: Float + FromPrimitive + AsPrimitive<f64>> {
     pub x: T,
@@ -414,12 +352,6 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64>> Neg for Vector2<T> {
         }
     }
 }
-
-// impl<T: Float + FromPrimitive + AsPrimitive<f64>> Display for Vector2<T> {
-//     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-//         write!(f, "x: {}, y: {}", self.x, self.y)
-//     }
-// }
 
 #[allow(dead_code)]
 impl<T: Float + FromPrimitive + AsPrimitive<f64>> Vector2<T> {

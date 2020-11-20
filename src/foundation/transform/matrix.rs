@@ -9,6 +9,7 @@ pub struct Matrix4x4<T: Float + FromPrimitive> {
 }
 
 impl<T: Float + FromPrimitive> Matrix4x4<T> {
+    #[allow(clippy::too_many_arguments)]
     /// Create a matrix from 16 Floats
     pub fn matrix_from_floats(
         t00: T,
@@ -159,6 +160,12 @@ impl<T: Float + FromPrimitive> Matrix4x4<T> {
         }
 
         Self { m: minv }
+    }
+
+    pub fn det(&self) -> T {
+        self.m[0][0] * (self.m[1][1] * self.m[2][2] - self.m[1][2] * self.m[2][1])
+            - self.m[0][1] * (self.m[1][0] * self.m[2][2] - self.m[1][2] * self.m[2][0])
+            + self.m[0][2] * (self.m[1][0] * self.m[2][1] - self.m[1][1] * self.m[2][0])
     }
 }
 

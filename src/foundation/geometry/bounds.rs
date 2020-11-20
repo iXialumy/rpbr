@@ -7,8 +7,8 @@ use crate::foundation::geometry::vector::Vector3;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Bounds3<T: Float + FromPrimitive + AsPrimitive<f64>> {
-    p_min: Point3<T>,
-    p_max: Point3<T>,
+    pub p_min: Point3<T>,
+    pub p_max: Point3<T>,
 }
 
 impl<T: Float + FromPrimitive + AsPrimitive<f64>> Index<i32> for Bounds3<T> {
@@ -41,7 +41,7 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64>> Bounds3<T> {
 
     /// Returns one of the eight corners Points
     pub fn corner(self, corner: i32) -> Point3<T> {
-        debug_assert!(corner >= 0 && corner < 8);
+        debug_assert!((0..8).contains(&corner));
         let x = corner & 1;
         let y = if (corner & 2) == 0 { 0 } else { 1 };
         let z = if (corner & 4) == 0 { 0 } else { 1 };
@@ -58,6 +58,14 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64>> Bounds3<T> {
         Self {
             p_min: Point3::min(self.p_min, other.p_min),
             p_max: Point3::max(self.p_max, other.p_max),
+        }
+    }
+
+    /// Returns a box, in which the box and the point will fit
+    pub fn union_point(&self, point: Point3<T>) -> Bounds3<T> {
+        Self {
+            p_min: Point3::min(self.p_min, point),
+            p_max: Point3::max(self.p_max, point),
         }
     }
 
@@ -105,16 +113,23 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64>> Bounds3<T> {
                 },
         }
     }
-}
 
-impl<T: Float + AsPrimitive<f64> + FromPrimitive> Bounds3<T> {
     pub fn diagonal(self) -> Vector3<T> {
-        (self.p_max - self.p_min).into()
+        self.p_max - self.p_min
     }
 
     pub fn maximum_extent(self) -> i8 {
         let diag = self.diagonal();
         diag.max_dimension()
+    }
+}
+
+impl<T: Float + AsPrimitive<f64> + FromPrimitive> From<Point3<T>> for Bounds3<T> {
+    fn from(point: Point3<T>) -> Self {
+        Bounds3 {
+            p_min: point,
+            p_max: point,
+        }
     }
 }
 

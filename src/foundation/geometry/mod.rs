@@ -1,4 +1,4 @@
-mod bounds;
+pub mod bounds;
 pub mod normal;
 pub mod point;
 pub mod ray;

@@ -85,6 +85,14 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64>> Div<T> for Point3<T> {
 }
 
 impl<T: Float + FromPrimitive + AsPrimitive<f64>> Point3<T> {
+    pub fn default() -> Point3<T> {
+        Point3 {
+            x: T::from_f64(0.0).unwrap(),
+            y: T::from_f64(0.0).unwrap(),
+            z: T::from_f64(0.0).unwrap(),
+        }
+    }
+
     pub fn length_squared(self) -> T {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
@@ -122,26 +130,6 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64>> Point3<T> {
     }
 
     // pub fn lerp(self) ->
-}
-
-impl Point3<f32> {
-    pub fn new() -> Self {
-        Point3 {
-            x: 0.0,
-            y: 0.0,
-            z: 0.0,
-        }
-    }
-}
-
-impl Point3<f64> {
-    pub fn new() -> Self {
-        Point3 {
-            x: 0.0,
-            y: 0.0,
-            z: 0.0,
-        }
-    }
 }
 
 pub struct Point2<T: Float + FromPrimitive + AsPrimitive<f64>> {

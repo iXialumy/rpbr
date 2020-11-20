@@ -14,26 +14,13 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64>> Ray<T> {
     pub fn at(self, length: T) -> Point3<T> {
         self.origin + (self.direction * length)
     }
-}
 
-impl Ray<f32> {
-    pub fn new() -> Ray<f32> {
+    pub fn default() -> Ray<T> {
         Ray {
-            origin: Point3::<f32>::new(),
-            direction: Vector3::<f32>::empty(),
-            max_length: f32::INFINITY,
-            time: 0.0,
-        }
-    }
-}
-
-impl Ray<f64> {
-    pub fn new() -> Ray<f64> {
-        Ray {
-            origin: Point3::<f64>::new(),
-            direction: Vector3::<f64>::empty(),
-            max_length: f64::INFINITY,
-            time: 0.0,
+            origin: Point3::default(),
+            direction: Vector3::empty(),
+            max_length: T::infinity(),
+            time: T::from_f64(0.0).unwrap(),
         }
     }
 }

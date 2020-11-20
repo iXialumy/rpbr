@@ -1,8 +1,13 @@
 use std::cmp::Ordering;
+use std::fmt::Debug;
+use std::ops::Mul;
 
 use num_traits::{AsPrimitive, Float, FromPrimitive};
 
+use crate::foundation::geometry::bounds::Bounds3;
+use crate::foundation::geometry::normal::Normal3;
 use crate::foundation::geometry::point::Point3;
+use crate::foundation::geometry::ray::Ray;
 use crate::foundation::geometry::vector::Vector3;
 use crate::foundation::transform::matrix::Matrix4x4;
 
@@ -12,7 +17,7 @@ pub struct Transform<T: Float + FromPrimitive> {
     pub inverse: Matrix4x4<T>,
 }
 
-impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy> Transform<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> Transform<T> {
     /// Create a transform with the identity matrix
     pub fn identity() -> Self {
         Self {
@@ -241,9 +246,48 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy> Transform<T> {
             inverse: camera_to_world,
         }
     }
+
+    pub fn transform_point_with_error(self, point: Point3<T>) -> (Point3<T>, Vector3<T>) {
+        let x = point.x;
+        let y = point.y;
+        let z = point.z;
+        let m = self.matrix.m;
+
+        let xp = m[0][0] * x + m[0][1] * y + m[0][2] * z + m[0][3];
+        let yp = m[1][0] * x + m[1][1] * y + m[1][2] * z + m[1][3];
+        let zp = m[2][0] * x + m[2][1] * y + m[2][2] * z + m[2][3];
+        let wp = m[3][0] * x + m[3][1] * y + m[3][2] * z + m[3][3];
+
+        let x_abs_sum =
+            T::abs(m[0][0] * x) + T::abs(m[0][1] * y) + T::abs(m[0][2] * z) + T::abs(m[0][3]);
+        let y_abs_sum =
+            T::abs(m[1][0] * x) + T::abs(m[1][1] * y) + T::abs(m[1][2] * z) + T::abs(m[1][3]);
+        let z_abs_sum =
+            T::abs(m[2][0] * x) + T::abs(m[2][1] * y) + T::abs(m[2][2] * z) + T::abs(m[2][3]);
+
+        let error: Vector3<T> = /*gamma(3) **/ Vector3::new(x_abs_sum, y_abs_sum, z_abs_sum);
+
+        debug_assert_eq!(wp, T::from_f64(0.0).unwrap());
+
+        let p = Point3 {
+            x: xp,
+            y: yp,
+            z: zp,
+        };
+        if wp == T::from_f64(1.0).unwrap() {
+            (p, error)
+        } else {
+            (p / wp, error)
+        }
+    }
+
+    /// Tells if a transformatin will swap the handedness of a coordinate system
+    pub fn swaps_handedness(self) -> bool {
+        self.matrix.det() < T::from_f64(0.0).unwrap()
+    }
 }
 
-impl<T: Float + FromPrimitive + AsPrimitive<f64>> From<[[T; 4]; 4]> for Transform<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64> + Debug> From<[[T; 4]; 4]> for Transform<T> {
     fn from(array: [[T; 4]; 4]) -> Self {
         Transform::new(Matrix4x4::from(array))
     }
@@ -262,6 +306,276 @@ impl<T: Float + FromPrimitive> PartialOrd for Transform<T> {
             }
         }
         Some(Ordering::Equal)
+    }
+}
+
+/// Transform a Point with a matrix
+///
+/// Example:
+///
+/// ```
+/// #![feature(fn_traits)]
+/// use rpbr::foundation::geometry::point::Point3;
+/// use rpbr::foundation::transform::matrix::Matrix4x4;
+/// use rpbr::foundation::transform::transform::Transform;
+/// let p = Point3 {
+///     x: 1.0,
+///     y: 2.0,
+///     z: 3.0
+/// };
+///
+///
+/// let m = Matrix4x4::from([[-5.0,   2.0,   3.0,  0.0]
+///                         ,[ 1.0,   1.0,  -1.0,  2.0]
+///                         ,[ 2.0,  -2.0,  -2.0,  0.0]
+///                         ,[ 0.0,  -2.0,   1.0, -3.0]
+///                         ]
+/// );
+///
+/// let t = Transform::new(m);
+///
+/// let expected = Point3 {
+///     x: -2.0,
+///     y: -0.5,
+///     z:  2.0
+/// };
+///
+/// assert_eq!(expected, t(p));
+/// ```
+impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> Fn<(Point3<T>,)> for Transform<T> {
+    extern "rust-call" fn call(&self, args: (Point3<T>,)) -> Point3<T> {
+        let point = args.0;
+        let x = point.x;
+        let y = point.y;
+        let z = point.z;
+        let m = self.matrix.m;
+
+        let xp = m[0][0] * x + m[0][1] * y + m[0][2] * z + m[0][3];
+        let yp = m[1][0] * x + m[1][1] * y + m[1][2] * z + m[1][3];
+        let zp = m[2][0] * x + m[2][1] * y + m[2][2] * z + m[2][3];
+        let wp = m[3][0] * x + m[3][1] * y + m[3][2] * z + m[3][3];
+
+        assert_ne!(wp, T::from_f64(0.0).unwrap());
+        if wp == T::from_f64(0.0).unwrap() {
+            Point3 {
+                x: xp,
+                y: yp,
+                z: zp,
+            }
+        } else {
+            Point3 {
+                x: xp,
+                y: yp,
+                z: zp,
+            } / wp
+        }
+    }
+}
+
+impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> FnMut<(Point3<T>,)>
+    for Transform<T>
+{
+    extern "rust-call" fn call_mut(&mut self, point: (Point3<T>,)) -> Point3<T> {
+        self.call(point)
+    }
+}
+
+impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> FnOnce<(Point3<T>,)>
+    for Transform<T>
+{
+    type Output = Point3<T>;
+
+    extern "rust-call" fn call_once(self, point: (Point3<T>,)) -> Self::Output {
+        self.call(point)
+    }
+}
+
+impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> Fn<(Vector3<T>,)>
+    for Transform<T>
+{
+    extern "rust-call" fn call(&self, args: (Vector3<T>,)) -> Vector3<T> {
+        let vector = args.0;
+        let x = vector.x;
+        let y = vector.y;
+        let z = vector.z;
+        let m = self.matrix.m;
+
+        Vector3 {
+            x: m[0][0] * x + m[0][1] * y + m[0][2] * z,
+            y: m[1][0] * x + m[1][1] * y + m[1][2] * z,
+            z: m[2][0] * x + m[2][1] * y + m[2][2] * z,
+        }
+    }
+}
+
+impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> FnMut<(Vector3<T>,)>
+    for Transform<T>
+{
+    extern "rust-call" fn call_mut(&mut self, vector: (Vector3<T>,)) -> Vector3<T> {
+        self.call(vector)
+    }
+}
+
+impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> FnOnce<(Vector3<T>,)>
+    for Transform<T>
+{
+    type Output = Vector3<T>;
+
+    extern "rust-call" fn call_once(self, vector: (Vector3<T>,)) -> Self::Output {
+        self.call(vector)
+    }
+}
+
+impl<T: Float + FromPrimitive + AsPrimitive<f64> + Debug> Fn<(Normal3<T>,)> for Transform<T> {
+    extern "rust-call" fn call(&self, args: (Normal3<T>,)) -> Normal3<T> {
+        let normal = args.0;
+        let x = normal.x;
+        let y = normal.y;
+        let z = normal.z;
+        let m = self.matrix.m;
+
+        Normal3 {
+            x: m[0][0] * x + m[0][1] * y + m[0][2] * z,
+            y: m[1][0] * x + m[1][1] * y + m[1][2] * z,
+            z: m[2][0] * x + m[2][1] * y + m[2][2] * z,
+        }
+    }
+}
+
+impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> FnMut<(Normal3<T>,)>
+    for Transform<T>
+{
+    extern "rust-call" fn call_mut(&mut self, normal: (Normal3<T>,)) -> Normal3<T> {
+        self.call(normal)
+    }
+}
+
+impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> FnOnce<(Normal3<T>,)>
+    for Transform<T>
+{
+    type Output = Normal3<T>;
+
+    extern "rust-call" fn call_once(self, normal: (Normal3<T>,)) -> Self::Output {
+        self.call(normal)
+    }
+}
+
+impl<T: Float + FromPrimitive + AsPrimitive<f64> + Debug> Fn<(Ray<T>,)> for Transform<T> {
+    extern "rust-call" fn call(&self, args: (Ray<T>,)) -> Ray<T> {
+        let ray = args.0;
+        let (mut origin, o_error) = self.transform_point_with_error(ray.origin);
+        let direction = self(ray.direction);
+
+        let length_squared = direction.length_squared();
+        let mut max_length = ray.max_length;
+        if length_squared > T::from_f64(0.0).unwrap() {
+            let dt = Vector3::dot(&direction.abs(), o_error) / length_squared;
+            origin = origin + (direction * dt);
+            max_length = max_length - dt;
+        }
+
+        Ray {
+            origin,
+            direction,
+            max_length,
+            time: ray.time,
+            // TODO medium: ray.medium,
+        }
+    }
+}
+
+impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> FnMut<(Ray<T>,)> for Transform<T> {
+    extern "rust-call" fn call_mut(&mut self, ray: (Ray<T>,)) -> Ray<T> {
+        self.call(ray)
+    }
+}
+
+impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> FnOnce<(Ray<T>,)>
+    for Transform<T>
+{
+    type Output = Ray<T>;
+
+    extern "rust-call" fn call_once(self, ray: (Ray<T>,)) -> Self::Output {
+        self.call(ray)
+    }
+}
+
+impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> Fn<(Bounds3<T>,)>
+    for Transform<T>
+{
+    extern "rust-call" fn call(&self, bounds: (Bounds3<T>,)) -> Bounds3<T> {
+        let b = bounds.0;
+        let mut ret = Bounds3::from(self(Point3 {
+            x: b.p_min.y,
+            y: b.p_min.y,
+            z: b.p_min.z,
+        }));
+        ret = ret.union_point(self(Point3 {
+            x: b.p_max.x,
+            y: b.p_min.y,
+            z: b.p_min.z,
+        }));
+        ret = ret.union_point(self(Point3 {
+            x: b.p_min.y,
+            y: b.p_max.y,
+            z: b.p_min.z,
+        }));
+        ret = ret.union_point(self(Point3 {
+            x: b.p_min.y,
+            y: b.p_min.y,
+            z: b.p_max.z,
+        }));
+        ret = ret.union_point(self(Point3 {
+            x: b.p_min.y,
+            y: b.p_max.y,
+            z: b.p_max.z,
+        }));
+        ret = ret.union_point(self(Point3 {
+            x: b.p_max.x,
+            y: b.p_max.y,
+            z: b.p_min.z,
+        }));
+        ret = ret.union_point(self(Point3 {
+            x: b.p_max.x,
+            y: b.p_min.y,
+            z: b.p_max.z,
+        }));
+        ret = ret.union_point(self(Point3 {
+            x: b.p_max.x,
+            y: b.p_max.y,
+            z: b.p_max.z,
+        }));
+
+        ret
+    }
+}
+
+impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> FnMut<(Bounds3<T>,)>
+    for Transform<T>
+{
+    extern "rust-call" fn call_mut(&mut self, bounds: (Bounds3<T>,)) -> Bounds3<T> {
+        self.call(bounds)
+    }
+}
+
+impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> FnOnce<(Bounds3<T>,)>
+    for Transform<T>
+{
+    type Output = Bounds3<T>;
+
+    extern "rust-call" fn call_once(self, bounds: (Bounds3<T>,)) -> Self::Output {
+        self.call(bounds)
+    }
+}
+
+impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> Mul for Transform<T> {
+    type Output = Transform<T>;
+
+    fn mul(self, other: Self) -> Self::Output {
+        Self {
+            matrix: self.matrix * other.matrix,
+            inverse: other.inverse * self.inverse,
+        }
     }
 }
 
