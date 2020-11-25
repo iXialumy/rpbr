@@ -500,6 +500,22 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> FnOnce<(Ray<T>,
     }
 }
 
+/// Transforms Bound
+///
+/// Example:
+/// ```
+/// use rpbr::foundation::geometry::bounds::Bounds3;
+/// use rpbr::foundation::geometry::point::Point3;
+/// use rpbr::foundation::transform::transform::Transform;
+///
+/// let bounds = Bounds3::new(Point3::default(), Point3::new(1.0, 2.0, 3.0));
+/// let transform = &Transform::scale(1.0, 1.0, 1.0);
+///
+/// let actual = (*transform)(bounds);
+/// let expected = bounds;
+///
+/// assert_eq!(actual, expected);
+/// ```
 impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> Fn<(Bounds3<T>,)>
     for Transform<T>
 {
