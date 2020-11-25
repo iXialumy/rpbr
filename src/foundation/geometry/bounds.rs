@@ -109,8 +109,7 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64>> Bounds3<T> {
     }
 
     pub fn maximum_extent(self) -> i8 {
-        let diag = self.diagonal();
-        diag.max_dimension()
+        self.diagonal().max_dimension()
     }
 
     pub fn intersect_p(self, ray: Ray<T>) -> Option<(T, T)> {
