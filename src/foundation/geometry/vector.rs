@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Div, DivAssign, Index, Mul, MulAssign, Neg, Sub, SubAssign};
 
 use num_traits::{AsPrimitive, Float, FromPrimitive};
 
@@ -25,6 +25,19 @@ pub struct Vector3<T: Float + FromPrimitive + AsPrimitive<f64> + Copy> {
     pub x: T,
     pub y: T,
     pub z: T,
+}
+
+impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy> Index<i32> for Vector3<T> {
+    type Output = T;
+
+    fn index(&self, index: i32) -> &Self::Output {
+        match index {
+            0 => &self.x,
+            1 => &self.y,
+            2 => &self.z,
+            _ => panic!("Index out of bounds: {} for Vector3", index),
+        }
+    }
 }
 
 impl<T: Float + FromPrimitive + AsPrimitive<f64>> Add for Vector3<T> {
