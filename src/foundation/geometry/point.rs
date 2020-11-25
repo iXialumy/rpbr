@@ -93,6 +93,10 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64>> Point3<T> {
         }
     }
 
+    pub fn new(x: T, y: T, z: T) -> Self {
+        Self { x, y, z }
+    }
+
     pub fn length_squared(self) -> T {
         self.x * self.x + self.y * self.y + self.z * self.z
     }
