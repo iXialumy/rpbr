@@ -3,7 +3,9 @@ use std::ops::Index;
 use num_traits::{AsPrimitive, Float, FromPrimitive};
 
 use crate::foundation::geometry::point::Point3;
+use crate::foundation::geometry::ray::Ray;
 use crate::foundation::geometry::vector::Vector3;
+use std::mem::swap;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub struct Bounds3<T: Float + FromPrimitive + AsPrimitive<f64>> {
@@ -109,6 +111,76 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64>> Bounds3<T> {
     pub fn maximum_extent(self) -> i8 {
         let diag = self.diagonal();
         diag.max_dimension()
+    }
+
+    pub fn intersect_p(self, ray: Ray<T>) -> Option<(T, T)> {
+        let mut t0 = T::from_f64(0.0).unwrap();
+        let mut t1 = ray.max_length;
+
+        for i in 0..3 {
+            let inv_ray_dir = T::from_f64(1.0).unwrap() / ray.direction[i];
+            let mut t_near = (self.p_min[i] - ray.origin[i]) * inv_ray_dir;
+            let mut t_far = (self.p_max[i] - ray.origin[i]) * inv_ray_dir;
+
+            if t_near > t_far {
+                swap(&mut t_near, &mut t_far);
+            }
+
+            // TODO comment in when gamma will be implemented
+            // t_far = t_far * (T::from_f64(1.0).unwrap() + T::from_f64(2.0).unwrap() * gamma(T::from_f64(3.0).unwrap()));
+            t0 = if t_near > t0 { t_near } else { t0 };
+            t1 = if t_far < t1 { t_far } else { t1 };
+
+            if t0 > t1 {
+                return None;
+            }
+        }
+
+        Some((t0, t1))
+    }
+
+    pub fn intersect_p_precomp(
+        self,
+        ray: Ray<T>,
+        inv_dir: &Vector3<T>,
+        dir_is_neg: Box<[i32]>,
+    ) -> bool {
+        let mut t_min = (self[dir_is_neg[0]].x - ray.origin.x) * inv_dir.x;
+        let mut t_max = (self[1 - dir_is_neg[0]].x - ray.origin.x) * inv_dir.x;
+        let mut ty_min = (self[dir_is_neg[1]].y - ray.origin.y) * inv_dir.y;
+        let mut ty_max = (self[1 - dir_is_neg[1]].y - ray.origin.y) * inv_dir.y;
+
+        // TODO comment in when gamma will be implemented
+        // t_max = t_max * (T::from_f64(1.0).unwrap() + T::from_f64(2.0).unwrap() * gamma(T::from_f64(3.0).unwrap()));
+        // ty_max = ty_max * (T::from_f64(1.0).unwrap() + T::from_f64(2.0).unwrap() * gamma(T::from_f64(3.0).unwrap()));
+
+        if t_min > t_max || ty_min > t_max {
+            return false;
+        }
+        if ty_min > t_min {
+            t_min = ty_min;
+        }
+        if ty_max < t_max {
+            t_max = ty_max;
+        }
+
+        let mut tz_min = (self[dir_is_neg[2]].z - ray.origin.z) * inv_dir.z;
+        let mut tz_max = (self[1 - dir_is_neg[2]].z - ray.origin.z) * inv_dir.z;
+
+        // TODO comment in when gamma will be implemented
+        // tz_max = tz_max * (T::from_f64(1.0).unwrap() + T::from_f64(2.0).unwrap() * gamma(T::from_f64(3.0).unwrap()));
+
+        if t_min > tz_max || tz_min > t_max {
+            return false;
+        }
+        if tz_min > t_min {
+            t_min = tz_min;
+        }
+        if tz_max < t_max {
+            t_max = tz_max;
+        }
+
+        (t_min < ray.max_length) && (t_max > T::zero())
     }
 }
 
