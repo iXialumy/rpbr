@@ -11,18 +11,6 @@ pub struct Bounds3<T: Float + FromPrimitive + AsPrimitive<f64>> {
     pub p_max: Point3<T>,
 }
 
-impl<T: Float + FromPrimitive + AsPrimitive<f64>> Index<i32> for Bounds3<T> {
-    type Output = Point3<T>;
-
-    fn index(&self, index: i32) -> &Self::Output {
-        match index {
-            0 => &self.p_min,
-            1 => &self.p_max,
-            _ => panic!("Index {} out of bounds for Bounds", index),
-        }
-    }
-}
-
 impl<T: Float + FromPrimitive + AsPrimitive<f64>> Bounds3<T> {
     pub fn new(p1: Point3<T>, p2: Point3<T>) -> Self {
         Self {
@@ -121,6 +109,18 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64>> Bounds3<T> {
     pub fn maximum_extent(self) -> i8 {
         let diag = self.diagonal();
         diag.max_dimension()
+    }
+}
+
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> Index<i32> for Bounds3<T> {
+    type Output = Point3<T>;
+
+    fn index(&self, index: i32) -> &Self::Output {
+        match index {
+            0 => &self.p_min,
+            1 => &self.p_max,
+            _ => panic!("Index {} out of bounds for Bounds", index),
+        }
     }
 }
 
