@@ -7,4 +7,12 @@ pub struct Normal3<T: Float + FromPrimitive + AsPrimitive<f64> + Copy> {
     pub z: T,
 }
 
-impl<T: Float + FromPrimitive + AsPrimitive<f64>> Normal3<T> {}
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> Normal3<T> {
+    pub fn default() -> Normal3<T> {
+        Normal3 {
+            x: T::zero(),
+            y: T::zero(),
+            z: T::zero(),
+        }
+    }
+}
