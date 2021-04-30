@@ -16,4 +16,5 @@ pub trait Shape<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug>: Cop
     fn world_bounds(self) -> Bounds3<T> {
         (*self.object_to_world())(self.object_bounds())
     }
+    fn area(&self) -> T;
 }
