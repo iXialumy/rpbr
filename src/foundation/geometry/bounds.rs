@@ -112,6 +112,9 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64>> Bounds3<T> {
         self.diagonal().max_dimension()
     }
 
+    /// Returns the intersection Point between the bounding box and a ray.
+    /// The return Tuple has the closer intersection distance as the first, and the farther
+    /// intersection distance as its second value
     pub fn intersect_p(self, ray: Ray<T>) -> Option<(T, T)> {
         let mut t0 = T::from_f64(0.0).unwrap();
         let mut t1 = ray.max_length;
