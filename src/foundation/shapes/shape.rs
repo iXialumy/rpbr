@@ -13,15 +13,10 @@ pub struct Intersection<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Deb
 }
 
 pub trait Shape<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug>: Copy {
-    fn new(
-        object_to_world: &Transform<T>,
-        world_to_object: &Transform<T>,
-        reverse_orientation: bool,
-    ) -> Self;
-    fn object_to_world<'a>(self) -> &'a Transform<T>;
+    fn object_to_world(self) -> Transform<T>;
     fn object_bounds(self) -> Bounds3<T>;
     fn world_bounds(self) -> Bounds3<T> {
-        (*self.object_to_world())(self.object_bounds())
+        (self.object_to_world())(self.object_bounds())
     }
     fn area(&self) -> T;
     fn intersect(&self, ray: Ray<T>) -> Option<Intersection<T>>;
