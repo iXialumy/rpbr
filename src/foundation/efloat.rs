@@ -83,6 +83,14 @@ impl<T: Float> Mul for EFloat<T> {
     }
 }
 
+impl<T: Float> Mul<T> for EFloat<T> {
+    type Output = Self;
+
+    fn mul(self, rhs: T) -> Self::Output {
+        EFloat::from(rhs) * self
+    }
+}
+
 impl<T: Float> Div for EFloat<T> {
     type Output = Self;
 
