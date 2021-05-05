@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 use std::fmt::Debug;
 use std::ops::Mul;
 
-use num_traits::{AsPrimitive, Float, FromPrimitive};
+use num_traits::{abs, AsPrimitive, Float, FromPrimitive, Signed};
 
 use crate::foundation::geometry::bounds::Bounds3;
 use crate::foundation::geometry::normal::Normal3;
@@ -10,6 +10,8 @@ use crate::foundation::geometry::point::Point3;
 use crate::foundation::geometry::ray::Ray;
 use crate::foundation::geometry::vector::Vector3;
 use crate::foundation::transform::matrix::Matrix4x4;
+use crate::foundation::util::gamma;
+use num_traits::real::Real;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Transform<T: Float + FromPrimitive> {
@@ -17,7 +19,7 @@ pub struct Transform<T: Float + FromPrimitive> {
     pub inverse: Matrix4x4<T>,
 }
 
-impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> Transform<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug + Signed> Transform<T> {
     /// Create a transform with the identity matrix
     pub fn identity() -> Self {
         Self {
@@ -258,14 +260,21 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> Transform<T> {
         let zp = m[2][0] * x + m[2][1] * y + m[2][2] * z + m[2][3];
         let wp = m[3][0] * x + m[3][1] * y + m[3][2] * z + m[3][3];
 
-        let x_abs_sum =
-            T::abs(m[0][0] * x) + T::abs(m[0][1] * y) + T::abs(m[0][2] * z) + T::abs(m[0][3]);
-        let y_abs_sum =
-            T::abs(m[1][0] * x) + T::abs(m[1][1] * y) + T::abs(m[1][2] * z) + T::abs(m[1][3]);
-        let z_abs_sum =
-            T::abs(m[2][0] * x) + T::abs(m[2][1] * y) + T::abs(m[2][2] * z) + T::abs(m[2][3]);
+        let x_abs_sum = Float::abs(m[0][0] * x)
+            + Float::abs(m[0][1] * y)
+            + Float::abs(m[0][2] * z)
+            + Float::abs(m[0][3]);
+        let y_abs_sum = Float::abs(m[1][0] * x)
+            + Float::abs(m[1][1] * y)
+            + Float::abs(m[1][2] * z)
+            + Float::abs(m[1][3]);
+        let z_abs_sum = Float::abs(m[2][0] * x)
+            + Float::abs(m[2][1] * y)
+            + Float::abs(m[2][2] * z)
+            + Float::abs(m[2][3]);
 
-        let error: Vector3<T> = /*gamma(3) **/ Vector3::new(x_abs_sum, y_abs_sum, z_abs_sum);
+        let error: Vector3<T> =
+            Vector3::new(x_abs_sum, y_abs_sum, z_abs_sum) * gamma(T::from_f64(3.0).unwrap());
 
         debug_assert_eq!(wp, T::from_f64(0.0).unwrap());
 
@@ -281,13 +290,74 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> Transform<T> {
         }
     }
 
+    pub fn transform_vector_with_error(self, vector: Vector3<T>) -> (Vector3<T>, Vector3<T>) {
+        let err_x = gamma(T::from_f64(3.0).unwrap())
+            * (abs(self.matrix.m[0][0] * vector.x)
+                + abs(self.matrix.m[0][1] * vector.y)
+                + abs(self.matrix.m[0][2] * vector.z));
+
+        let err_y = gamma(T::from_f64(3.0).unwrap())
+            * (abs(self.matrix.m[1][0] * vector.x)
+                + abs(self.matrix.m[1][1] * vector.y)
+                + abs(self.matrix.m[1][2] * vector.z));
+
+        let err_z = gamma(T::from_f64(3.0).unwrap())
+            * (abs(self.matrix.m[2][0] * vector.x)
+                + abs(self.matrix.m[2][1] * vector.y)
+                + abs(self.matrix.m[2][2] * vector.z));
+
+        let v_out = Vector3 {
+            x: self.matrix.m[0][0] * vector.x
+                + self.matrix.m[0][1] * vector.y
+                + self.matrix.m[0][2] * vector.z,
+            y: self.matrix.m[1][0] * vector.x
+                + self.matrix.m[1][1] * vector.y
+                + self.matrix.m[1][2] * vector.z,
+            z: self.matrix.m[2][0] * vector.x
+                + self.matrix.m[2][1] * vector.y
+                + self.matrix.m[2][2] * vector.z,
+        };
+
+        let err_out = Vector3 {
+            x: err_x,
+            y: err_y,
+            z: err_z,
+        };
+
+        (v_out, err_out)
+    }
+
+    pub fn transform_ray_with_error(self, ray: Ray<T>) -> (Ray<T>, Vector3<T>, Vector3<T>) {
+        let (mut origin, origin_error) = self.transform_point_with_error(ray.origin);
+        let (direction, direction_error) = self.transform_vector_with_error(ray.direction);
+
+        let max_length = ray.max_length;
+        let length_squared = direction.length_squared();
+
+        if length_squared > T::zero() {
+            let dt = direction.abs().dot(origin_error) / length_squared;
+            origin = origin + direction * dt;
+        }
+
+        let r = Ray {
+            origin,
+            direction,
+            max_length,
+            time: ray.time,
+        };
+
+        (r, origin_error, direction_error)
+    }
+
     /// Tells if a transformatin will swap the handedness of a coordinate system
     pub fn swaps_handedness(self) -> bool {
         self.matrix.det() < T::from_f64(0.0).unwrap()
     }
 }
 
-impl<T: Float + FromPrimitive + AsPrimitive<f64> + Debug> From<[[T; 4]; 4]> for Transform<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64> + Debug + Signed> From<[[T; 4]; 4]>
+    for Transform<T>
+{
     fn from(array: [[T; 4]; 4]) -> Self {
         Transform::new(Matrix4x4::from(array))
     }
@@ -460,7 +530,7 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> FnOnce<(Normal3
     }
 }
 
-impl<T: Float + FromPrimitive + AsPrimitive<f64> + Debug> Fn<(Ray<T>,)> for Transform<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64> + Debug + Signed> Fn<(Ray<T>,)> for Transform<T> {
     extern "rust-call" fn call(&self, args: (Ray<T>,)) -> Ray<T> {
         let ray = args.0;
         let (mut origin, o_error) = self.transform_point_with_error(ray.origin);
@@ -484,13 +554,15 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64> + Debug> Fn<(Ray<T>,)> for Tran
     }
 }
 
-impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> FnMut<(Ray<T>,)> for Transform<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug + Signed> FnMut<(Ray<T>,)>
+    for Transform<T>
+{
     extern "rust-call" fn call_mut(&mut self, ray: (Ray<T>,)) -> Ray<T> {
         self.call(ray)
     }
 }
 
-impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> FnOnce<(Ray<T>,)>
+impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug + Signed> FnOnce<(Ray<T>,)>
     for Transform<T>
 {
     type Output = Ray<T>;
