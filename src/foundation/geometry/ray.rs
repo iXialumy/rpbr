@@ -17,7 +17,7 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64>> Ray<T> {
 
     pub fn default() -> Ray<T> {
         Ray {
-            origin: Point3::default(),
+            origin: Point3::zero(),
             direction: Vector3::empty(),
             max_length: T::infinity(),
             time: T::from_f64(0.0).unwrap(),

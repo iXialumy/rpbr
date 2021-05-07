@@ -105,11 +105,11 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64>> Div<T> for Point3<T> {
 }
 
 impl<T: Float + FromPrimitive + AsPrimitive<f64>> Point3<T> {
-    pub fn default() -> Point3<T> {
+    pub fn zero() -> Point3<T> {
         Point3 {
-            x: T::from_f64(0.0).unwrap(),
-            y: T::from_f64(0.0).unwrap(),
-            z: T::from_f64(0.0).unwrap(),
+            x: T::zero(),
+            y: T::zero(),
+            z: T::zero(),
         }
     }
 

@@ -580,7 +580,7 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug + Signed> FnOnce
 /// use rpbr::foundation::geometry::point::Point3;
 /// use rpbr::foundation::transform::transform::Transform;
 ///
-/// let bounds = Bounds3::new(Point3::default(), Point3::new(1.0, 2.0, 3.0));
+/// let bounds = Bounds3::new(Point3::zero(), Point3::new(1.0, 2.0, 3.0));
 /// let transform = &Transform::scale(1.0, 1.0, 1.0);
 ///
 /// let actual = (*transform)(bounds);
