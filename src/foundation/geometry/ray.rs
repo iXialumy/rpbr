@@ -2,6 +2,7 @@ use crate::foundation::geometry::point::Point3;
 use crate::foundation::geometry::vector::Vector3;
 use num_traits::{AsPrimitive, Float, FromPrimitive};
 
+#[derive(Copy, Clone)]
 pub struct Ray<T: Float + FromPrimitive + AsPrimitive<f64>> {
     pub origin: Point3<T>,
     pub direction: Vector3<T>,
