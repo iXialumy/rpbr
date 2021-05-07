@@ -11,6 +11,16 @@ pub struct Point3<T: Float + FromPrimitive + AsPrimitive<f64>> {
     pub z: T,
 }
 
+impl<T: Float + AsPrimitive<f64> + FromPrimitive> Point3<T> {
+    pub fn abs(self) -> Self {
+        Point3 {
+            x: self.x.abs(),
+            y: self.y.abs(),
+            z: self.z.abs(),
+        }
+    }
+}
+
 impl<T: Float + FromPrimitive + AsPrimitive<f64>> Add for Point3<T> {
     type Output = Self;
 
