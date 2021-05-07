@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Div, Index, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Div, Index, Mul, MulAssign, Sub, SubAssign};
 
 use num_traits::{AsPrimitive, Float, FromPrimitive};
 
@@ -69,6 +69,26 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64>> Index<i32> for Point3<T> {
             2 => &self.z,
             _ => panic!("Index out of bounds: {}", index),
         }
+    }
+}
+
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> Mul<T> for Point3<T> {
+    type Output = Self;
+
+    fn mul(self, rhs: T) -> Self::Output {
+        Self {
+            x: self.x * rhs,
+            y: self.y * rhs,
+            z: self.z * rhs,
+        }
+    }
+}
+
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> MulAssign<T> for Point3<T> {
+    fn mul_assign(&mut self, rhs: T) {
+        self.x = self.x * rhs;
+        self.y = self.y * rhs;
+        self.z = self.z * rhs;
     }
 }
 
