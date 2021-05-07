@@ -11,7 +11,6 @@ use crate::foundation::geometry::ray::Ray;
 use crate::foundation::geometry::vector::Vector3;
 use crate::foundation::transform::matrix::Matrix4x4;
 use crate::foundation::util::gamma;
-use num_traits::real::Real;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Transform<T: Float + FromPrimitive> {
