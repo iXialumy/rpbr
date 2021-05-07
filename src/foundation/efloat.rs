@@ -18,12 +18,21 @@ impl<T: Float> EFloat<T> {
             high: value + error,
         }
     }
-    pub(crate) fn default() -> Self {
+    pub(crate) fn zero() -> Self {
         EFloat {
             value: T::zero(),
             low: T::zero(),
             high: T::zero(),
         }
+    }
+    pub(crate) fn value(self) -> T {
+        self.value
+    }
+    pub(crate) fn upper_bound(self) -> T {
+        self.high
+    }
+    pub(crate) fn lower_bound(self) -> T {
+        self.low
     }
 }
 
@@ -31,7 +40,7 @@ impl<T: Float> From<T> for EFloat<T> {
     fn from(value: T) -> Self {
         EFloat {
             value,
-            ..EFloat::default()
+            ..EFloat::zero()
         }
     }
 }
