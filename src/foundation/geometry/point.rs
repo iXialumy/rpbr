@@ -171,6 +171,12 @@ pub struct Point2<T: Float + FromPrimitive + AsPrimitive<f64>> {
     y: T,
 }
 
+impl<T: Float + FromPrimitive + AsPrimitive<f64>> Point2<T> {
+    pub fn new(x: T, y: T) -> Self {
+        Self { x, y }
+    }
+}
+
 impl<T: Float + FromPrimitive + AsPrimitive<f64>> Add for Point2<T> {
     type Output = Self;
 
