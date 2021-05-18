@@ -8,8 +8,8 @@ use crate::foundation::shapes::surface_interaction::SurfaceInteraction;
 use crate::foundation::transform::transform::Transform;
 
 pub struct Intersection<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> {
-    interaction: SurfaceInteraction<T>,
-    distance: T,
+    pub interaction: SurfaceInteraction<T>,
+    pub distance: T,
 }
 
 pub trait Shape<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug>: Copy {
