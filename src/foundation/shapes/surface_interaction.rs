@@ -6,11 +6,11 @@ use num_traits::{AsPrimitive, Float, FromPrimitive};
 use std::fmt::Debug;
 
 pub struct Shading<T: Float + AsPrimitive<f64> + FromPrimitive> {
-    n: Normal3<T>,
-    dpdu: Vector3<T>,
-    dpdv: Vector3<T>,
-    dndu: Normal3<T>,
-    dndv: Normal3<T>,
+    pub n: Normal3<T>,
+    pub dpdu: Vector3<T>,
+    pub dpdv: Vector3<T>,
+    pub dndu: Normal3<T>,
+    pub dndv: Normal3<T>,
 }
 
 pub struct CommonInteraction<T: Float + FromPrimitive + AsPrimitive<f64>> {
