@@ -1,15 +1,15 @@
 use crate::foundation::efloat::EFloat;
-use num_traits::{AsPrimitive, Float, FromPrimitive};
+use crate::foundation::pbr::Float;
 use std::mem::swap;
 
-pub fn gamma<T: Float>(n: T) -> T {
-    (n * T::epsilon()) / (T::one() - n * T::epsilon())
+pub fn gamma(n: Float) -> Float {
+    (n * Float::EPSILON) / (1.0 - n * Float::EPSILON)
 }
 
-pub fn quadratic<T: Float + AsPrimitive<f64> + FromPrimitive>(a: T, b: T, c: T) -> Option<(T, T)> {
-    let a = a.as_();
-    let b = b.as_();
-    let c = c.as_();
+pub fn quadratic(a: Float, b: Float, c: Float) -> Option<(Float, Float)> {
+    let a = a as f64;
+    let b = b as f64;
+    let c = c as f64;
 
     // Find quadratic discriminant
     let discrim = b * b - 4.0 * a * c;
@@ -32,32 +32,28 @@ pub fn quadratic<T: Float + AsPrimitive<f64> + FromPrimitive>(a: T, b: T, c: T) 
         swap(&mut t0, &mut t1);
     }
 
-    Some((T::from_f64(t0)?, T::from_f64(t1)?))
+    Some((t0 as Float, t1 as Float))
 }
 
-pub(crate) fn quadratic_ef<T: Float + AsPrimitive<f64> + FromPrimitive>(
-    a: EFloat<T>,
-    b: EFloat<T>,
-    c: EFloat<T>,
-) -> Option<(EFloat<T>, EFloat<T>)> {
-    let a64 = a.value().as_();
-    let b64 = b.value().as_();
-    let c64 = c.value().as_();
+pub(crate) fn quadratic_ef(a: EFloat, b: EFloat, c: EFloat) -> Option<(EFloat, EFloat)> {
+    let a64 = a.value() as f64;
+    let b64 = b.value() as f64;
+    let c64 = c.value() as f64;
 
     // Find quadratic discriminant
     let discrim = b64 * b64 - 4.0 * a64 * c64;
     if discrim < 0.0 {
         return None;
     }
-    let root_discrim = T::from_f64(discrim.sqrt()).unwrap();
-    let float_root_discrim = EFloat::new(root_discrim, T::epsilon() * root_discrim);
+    let root_discrim = discrim.sqrt() as Float;
+    let float_root_discrim = EFloat::new(root_discrim, Float::EPSILON * root_discrim);
 
     // Compute quadratic _t_ values
     let mut q = EFloat::zero();
     if b64 < 0.0 {
-        q = EFloat::from(T::from_f64(-0.5).unwrap()) * (b - float_root_discrim);
+        q = EFloat::from(-0.5) * (b - float_root_discrim);
     } else {
-        q = EFloat::from(T::from_f64(-0.5).unwrap()) * (b + float_root_discrim);
+        q = EFloat::from(-0.5) * (b + float_root_discrim);
     }
 
     let mut t0 = q / a;

@@ -1,27 +1,27 @@
 use crate::foundation::geometry::point::Point3;
 use crate::foundation::geometry::vector::Vector3;
-use num_traits::{AsPrimitive, Float, FromPrimitive};
+use crate::foundation::pbr::Float;
 
 #[derive(Copy, Clone)]
-pub struct Ray<T: Float + FromPrimitive + AsPrimitive<f64>> {
-    pub origin: Point3<T>,
-    pub direction: Vector3<T>,
-    pub max_length: T,
-    pub time: T,
+pub struct Ray {
+    pub origin: Point3,
+    pub direction: Vector3,
+    pub max_length: Float,
+    pub time: Float,
     //medium: Medium,
 }
 
-impl<T: Float + FromPrimitive + AsPrimitive<f64>> Ray<T> {
-    pub fn at(self, length: T) -> Point3<T> {
+impl Ray {
+    pub fn at(self, length: Float) -> Point3 {
         self.origin + (self.direction * length)
     }
 
-    pub fn default() -> Ray<T> {
+    pub fn default() -> Ray {
         Ray {
             origin: Point3::zero(),
             direction: Vector3::empty(),
-            max_length: T::infinity(),
-            time: T::from_f64(0.0).unwrap(),
+            max_length: Float::INFINITY,
+            time: 0.0,
         }
     }
 }

@@ -1,17 +1,16 @@
+use crate::foundation::pbr::Float;
 use std::cmp::Ordering;
 use std::ops::{Add, Div, Mul, Sub};
 
-use num_traits::{AsPrimitive, Float, FromPrimitive};
-
 #[derive(Copy, Clone)]
-pub(crate) struct EFloat<T: Float> {
-    value: T,
-    low: T,
-    high: T,
+pub(crate) struct EFloat {
+    value: Float,
+    low: Float,
+    high: Float,
 }
 
-impl<T: Float> EFloat<T> {
-    pub(crate) fn new(value: T, error: T) -> EFloat<T> {
+impl EFloat {
+    pub(crate) fn new(value: Float, error: Float) -> EFloat {
         EFloat {
             value,
             low: value - error,
@@ -20,24 +19,24 @@ impl<T: Float> EFloat<T> {
     }
     pub(crate) fn zero() -> Self {
         EFloat {
-            value: T::zero(),
-            low: T::zero(),
-            high: T::zero(),
+            value: 0.0,
+            low: 0.0,
+            high: 0.0,
         }
     }
-    pub(crate) fn value(self) -> T {
+    pub(crate) fn value(self) -> Float {
         self.value
     }
-    pub(crate) fn upper_bound(self) -> T {
+    pub(crate) fn upper_bound(self) -> Float {
         self.high
     }
-    pub(crate) fn lower_bound(self) -> T {
+    pub(crate) fn lower_bound(self) -> Float {
         self.low
     }
 }
 
-impl<T: Float> From<T> for EFloat<T> {
-    fn from(value: T) -> Self {
+impl From<Float> for EFloat {
+    fn from(value: Float) -> Self {
         EFloat {
             value,
             ..EFloat::zero()
@@ -45,7 +44,7 @@ impl<T: Float> From<T> for EFloat<T> {
     }
 }
 
-impl<T: Float> Add for EFloat<T> {
+impl Add for EFloat {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
@@ -58,7 +57,7 @@ impl<T: Float> Add for EFloat<T> {
     }
 }
 
-impl<T: Float> Sub for EFloat<T> {
+impl Sub for EFloat {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
@@ -71,7 +70,7 @@ impl<T: Float> Sub for EFloat<T> {
     }
 }
 
-impl<T: Float> Mul for EFloat<T> {
+impl Mul for EFloat {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
@@ -84,31 +83,37 @@ impl<T: Float> Mul for EFloat<T> {
             self.high * rhs.high,
         ];
 
-        let low = next_float_down(T::min(T::min(prod[0], prod[1]), T::min(prod[2], prod[3])));
-        let high = next_float_up(T::max(T::max(prod[0], prod[1]), T::max(prod[2], prod[3])));
+        let low = next_float_down(Float::min(
+            Float::min(prod[0], prod[1]),
+            Float::min(prod[2], prod[3]),
+        ));
+        let high = next_float_up(Float::max(
+            Float::max(prod[0], prod[1]),
+            Float::max(prod[2], prod[3]),
+        ));
 
         // TODO: Check
         Self { value, low, high }
     }
 }
 
-impl<T: Float> Mul<T> for EFloat<T> {
+impl Mul<Float> for EFloat {
     type Output = Self;
 
-    fn mul(self, rhs: T) -> Self::Output {
+    fn mul(self, rhs: Float) -> Self::Output {
         EFloat::from(rhs) * self
     }
 }
 
-impl<T: Float> Div for EFloat<T> {
+impl Div for EFloat {
     type Output = Self;
 
     fn div(self, rhs: Self) -> Self::Output {
         let value = self.value / rhs.value;
 
         // TODO Precise
-        let (low, high) = if rhs.low < T::zero() && rhs.high > T::zero() {
-            (T::neg_infinity(), T::infinity())
+        let (low, high) = if rhs.low < 0.0 && rhs.high > 0.0 {
+            (Float::NEG_INFINITY, Float::INFINITY)
         } else {
             let prod = vec![
                 self.low / rhs.low,
@@ -117,8 +122,14 @@ impl<T: Float> Div for EFloat<T> {
                 self.high / rhs.high,
             ];
 
-            let l = next_float_down(T::min(T::min(prod[0], prod[1]), T::min(prod[2], prod[3])));
-            let h = next_float_up(T::max(T::max(prod[0], prod[1]), T::max(prod[2], prod[3])));
+            let l = next_float_down(Float::min(
+                Float::min(prod[0], prod[1]),
+                Float::min(prod[2], prod[3]),
+            ));
+            let h = next_float_up(Float::max(
+                Float::max(prod[0], prod[1]),
+                Float::max(prod[2], prod[3]),
+            ));
             (l, h)
         };
 
@@ -126,13 +137,13 @@ impl<T: Float> Div for EFloat<T> {
     }
 }
 
-impl<T: Float> PartialEq for EFloat<T> {
+impl PartialEq for EFloat {
     fn eq(&self, other: &Self) -> bool {
         self.value == other.value
     }
 }
 
-impl<T: Float> PartialOrd for EFloat<T> {
+impl PartialOrd for EFloat {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         if self == other {
             return Some(Ordering::Equal);
@@ -146,22 +157,18 @@ impl<T: Float> PartialOrd for EFloat<T> {
     }
 }
 
-fn next_float_up<T: Float>(f: T) -> T {
+fn next_float_up(f: Float) -> Float {
     unimplemented!()
 }
 
-fn next_float_down<T: Float>(f: T) -> T {
+fn next_float_down(f: Float) -> Float {
     unimplemented!()
 }
 
-fn quadratic<T: Float + FromPrimitive + AsPrimitive<f64>>(
-    a: EFloat<T>,
-    b: EFloat<T>,
-    c: EFloat<T>,
-) -> Option<(EFloat<T>, EFloat<T>)> {
-    let av = a.value.as_();
-    let bv = b.value.as_();
-    let cv = c.value.as_();
+fn quadratic(a: EFloat, b: EFloat, c: EFloat) -> Option<(EFloat, EFloat)> {
+    let av = a.value as f64;
+    let bv = b.value as f64;
+    let cv = c.value as f64;
 
     let discrim = bv * bv - 4.0 * av * cv;
 
@@ -171,12 +178,12 @@ fn quadratic<T: Float + FromPrimitive + AsPrimitive<f64>>(
 
     let root_discrim = discrim.sqrt();
     let float_root_discrim = EFloat::new(
-        T::from(root_discrim).unwrap(),
-        T::from(f64::EPSILON * root_discrim).unwrap(),
+        root_discrim as Float,
+        (f64::EPSILON * root_discrim) as Float,
     );
 
-    let q = EFloat::from(T::from_f64(-0.5).unwrap())
-        * (if b.value < T::zero() {
+    let q = EFloat::from(-0.5)
+        * (if b.value < 0.0 {
             b - float_root_discrim
         } else {
             b + float_root_discrim

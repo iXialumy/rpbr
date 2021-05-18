@@ -1,33 +1,32 @@
+use crate::foundation::pbr::Float;
 use std::ops::Mul;
 use std::ptr::swap;
 
-use num_traits::{Float, FromPrimitive};
-
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
-pub struct Matrix4x4<T: Float + FromPrimitive> {
-    pub m: [[T; 4]; 4],
+pub struct Matrix4x4 {
+    pub m: [[Float; 4]; 4],
 }
 
-impl<T: Float + FromPrimitive> Matrix4x4<T> {
+impl Matrix4x4 {
     #[allow(clippy::too_many_arguments)]
     /// Create a matrix from 16 Floats
     pub fn matrix_from_floats(
-        t00: T,
-        t01: T,
-        t02: T,
-        t03: T,
-        t10: T,
-        t11: T,
-        t12: T,
-        t13: T,
-        t20: T,
-        t21: T,
-        t22: T,
-        t23: T,
-        t30: T,
-        t31: T,
-        t32: T,
-        t33: T,
+        t00: Float,
+        t01: Float,
+        t02: Float,
+        t03: Float,
+        t10: Float,
+        t11: Float,
+        t12: Float,
+        t13: Float,
+        t20: Float,
+        t21: Float,
+        t22: Float,
+        t23: Float,
+        t30: Float,
+        t31: Float,
+        t32: Float,
+        t33: Float,
     ) -> Self {
         Self {
             m: [
@@ -43,35 +42,15 @@ impl<T: Float + FromPrimitive> Matrix4x4<T> {
     pub fn identity() -> Self {
         Self {
             m: [
-                [
-                    T::from_f64(1.0).unwrap(),
-                    T::from_f64(0.0).unwrap(),
-                    T::from_f64(0.0).unwrap(),
-                    T::from_f64(0.0).unwrap(),
-                ],
-                [
-                    T::from_f64(0.0).unwrap(),
-                    T::from_f64(1.0).unwrap(),
-                    T::from_f64(0.0).unwrap(),
-                    T::from_f64(0.0).unwrap(),
-                ],
-                [
-                    T::from_f64(0.0).unwrap(),
-                    T::from_f64(0.0).unwrap(),
-                    T::from_f64(1.0).unwrap(),
-                    T::from_f64(0.0).unwrap(),
-                ],
-                [
-                    T::from_f64(0.0).unwrap(),
-                    T::from_f64(0.0).unwrap(),
-                    T::from_f64(0.0).unwrap(),
-                    T::from_f64(1.0).unwrap(),
-                ],
+                [1.0, 0.0, 0.0, 0.0],
+                [0.0, 1.0, 0.0, 0.0],
+                [0.0, 0.0, 1.0, 0.0],
+                [0.0, 0.0, 0.0, 1.0],
             ],
         }
     }
 
-    /// Transpose the Matrix
+    /// Floatranspose the Matrix
     pub fn transpose(self) -> Self {
         Self {
             m: [
@@ -93,7 +72,7 @@ impl<T: Float + FromPrimitive> Matrix4x4<T> {
         for i in 0..4 {
             let mut irow = 0;
             let mut icol = 0;
-            let mut big = T::from_f64(0.0).unwrap();
+            let mut big = 0.0;
 
             // Choose pivot
             for j in 0..4 {
@@ -122,13 +101,13 @@ impl<T: Float + FromPrimitive> Matrix4x4<T> {
 
             indxr[i] = irow as i32;
             indxc[i] = icol as i32;
-            if minv[icol][icol] == T::from_f64(0.0).unwrap() {
+            if minv[icol][icol] == 0.0 {
                 panic!("Singular matrix in MatrixInvert")
             }
 
             // Set self.m[icol][icol] to one by scaling row icol appropriately
-            let pivinv = T::from_f64(1.0).unwrap() / minv[icol][icol];
-            minv[icol][icol] = T::from_f64(1.0).unwrap();
+            let pivinv = 1.0 / minv[icol][icol];
+            minv[icol][icol] = 1.0;
             for j in 0..4 {
                 minv[icol][j] = minv[icol][j] * pivinv;
             }
@@ -137,7 +116,7 @@ impl<T: Float + FromPrimitive> Matrix4x4<T> {
             for j in 0..4 {
                 if j != icol {
                     let save = minv[j][icol];
-                    minv[j][icol] = T::from_f64(0.0).unwrap();
+                    minv[j][icol] = 0.0;
                     for k in 0..4 {
                         minv[j][k] = minv[j][k] - minv[icol][k] * save
                     }
@@ -162,18 +141,18 @@ impl<T: Float + FromPrimitive> Matrix4x4<T> {
         Self { m: minv }
     }
 
-    pub fn det(&self) -> T {
+    pub fn det(&self) -> Float {
         self.m[0][0] * (self.m[1][1] * self.m[2][2] - self.m[1][2] * self.m[2][1])
             - self.m[0][1] * (self.m[1][0] * self.m[2][2] - self.m[1][2] * self.m[2][0])
             + self.m[0][2] * (self.m[1][0] * self.m[2][1] - self.m[1][1] * self.m[2][0])
     }
 }
 
-impl<T: Float + FromPrimitive> Mul for Matrix4x4<T> {
+impl Mul for Matrix4x4 {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
-        let mut array: [[T; 4]; 4] = Matrix4x4::identity().m;
+        let mut array: [[Float; 4]; 4] = Matrix4x4::identity().m;
         for i in 0..4 {
             for j in 0..4 {
                 array[i][j] = self.m[i][0] * rhs.m[0][j]
@@ -186,8 +165,8 @@ impl<T: Float + FromPrimitive> Mul for Matrix4x4<T> {
     }
 }
 
-impl<T: Float + FromPrimitive> From<[[T; 4]; 4]> for Matrix4x4<T> {
-    fn from(array: [[T; 4]; 4]) -> Self {
+impl From<[[Float; 4]; 4]> for Matrix4x4 {
+    fn from(array: [[Float; 4]; 4]) -> Self {
         Self { m: array }
     }
 }
