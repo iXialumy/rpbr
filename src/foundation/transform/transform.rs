@@ -9,6 +9,10 @@ use crate::foundation::geometry::normal::Normal3;
 use crate::foundation::geometry::point::Point3;
 use crate::foundation::geometry::ray::Ray;
 use crate::foundation::geometry::vector::Vector3;
+use crate::foundation::shapes::interaction::Interaction;
+use crate::foundation::shapes::surface_interaction::{
+    CommonInteraction, Shading, SurfaceInteraction,
+};
 use crate::foundation::transform::matrix::Matrix4x4;
 use crate::foundation::util::gamma;
 
@@ -248,6 +252,33 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug + Signed> Transf
         }
     }
 
+    pub fn transform_point(self, point: Point3<T>) -> Point3<T> {
+        let x = point.x;
+        let y = point.y;
+        let z = point.z;
+        let m = self.matrix.m;
+
+        let xp = m[0][0] * x + m[0][1] * y + m[0][2] * z + m[0][3];
+        let yp = m[1][0] * x + m[1][1] * y + m[1][2] * z + m[1][3];
+        let zp = m[2][0] * x + m[2][1] * y + m[2][2] * z + m[2][3];
+        let wp = m[3][0] * x + m[3][1] * y + m[3][2] * z + m[3][3];
+
+        assert_ne!(wp, T::from_f64(0.0).unwrap());
+        if wp == T::from_f64(0.0).unwrap() {
+            Point3 {
+                x: xp,
+                y: yp,
+                z: zp,
+            }
+        } else {
+            Point3 {
+                x: xp,
+                y: yp,
+                z: zp,
+            } / wp
+        }
+    }
+
     pub fn transform_point_with_error(self, point: Point3<T>) -> (Point3<T>, Vector3<T>) {
         let x = point.x;
         let y = point.y;
@@ -259,18 +290,9 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug + Signed> Transf
         let zp = m[2][0] * x + m[2][1] * y + m[2][2] * z + m[2][3];
         let wp = m[3][0] * x + m[3][1] * y + m[3][2] * z + m[3][3];
 
-        let x_abs_sum = Float::abs(m[0][0] * x)
-            + Float::abs(m[0][1] * y)
-            + Float::abs(m[0][2] * z)
-            + Float::abs(m[0][3]);
-        let y_abs_sum = Float::abs(m[1][0] * x)
-            + Float::abs(m[1][1] * y)
-            + Float::abs(m[1][2] * z)
-            + Float::abs(m[1][3]);
-        let z_abs_sum = Float::abs(m[2][0] * x)
-            + Float::abs(m[2][1] * y)
-            + Float::abs(m[2][2] * z)
-            + Float::abs(m[2][3]);
+        let x_abs_sum = <Transform<T>>::calc_x_abs_sum(&x, &y, &z, m);
+        let y_abs_sum = <Transform<T>>::calc_y_abs_sum(&x, &y, &z, m);
+        let z_abs_sum = <Transform<T>>::calc_z_abs_sum(&x, &y, &z, m);
 
         let error: Vector3<T> =
             Vector3::new(x_abs_sum, y_abs_sum, z_abs_sum) * gamma(T::from_f64(3.0).unwrap());
@@ -287,6 +309,75 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug + Signed> Transf
         } else {
             (p / wp, error)
         }
+    }
+
+    pub fn transform_point_with_errors(
+        self,
+        point: Point3<T>,
+        error: Vector3<T>,
+    ) -> (Point3<T>, Vector3<T>) {
+        let x = point.x;
+        let y = point.y;
+        let z = point.z;
+        let m = self.matrix.m;
+
+        let xp = m[0][0] * x + m[0][1] * y + m[0][2] * z + m[0][3];
+        let yp = m[1][0] * x + m[1][1] * y + m[1][2] * z + m[1][3];
+        let zp = m[2][0] * x + m[2][1] * y + m[2][2] * z + m[2][3];
+        let wp = m[3][0] * x + m[3][1] * y + m[3][2] * z + m[3][3];
+
+        let abs_err_x = (gamma(T::from_f64(3.0).unwrap() + T::one()))
+            * (<Transform<T>>::calc_x_abs_sum(&error.x, &error.y, &error.z, m))
+            + (gamma(T::from_f64(3.0).unwrap() + T::one()))
+                * <Transform<T>>::calc_x_abs_sum(&x, &y, &z, m);
+        let abs_err_y = (gamma(T::from_f64(3.0).unwrap() + T::one()))
+            * (<Transform<T>>::calc_y_abs_sum(&error.x, &error.y, &error.z, m))
+            + (gamma(T::from_f64(3.0).unwrap() + T::one()))
+                * <Transform<T>>::calc_y_abs_sum(&x, &y, &z, m);
+        let abs_err_z = (gamma(T::from_f64(3.0).unwrap() + T::one()))
+            * (<Transform<T>>::calc_z_abs_sum(&error.x, &error.y, &error.z, m))
+            + (gamma(T::from_f64(3.0).unwrap() + T::one()))
+                * <Transform<T>>::calc_z_abs_sum(&x, &y, &z, m);
+
+        let error: Vector3<T> = Vector3::new(abs_err_x, abs_err_y, abs_err_z);
+
+        debug_assert_eq!(wp, T::from_f64(0.0).unwrap());
+
+        let p = Point3 {
+            x: xp,
+            y: yp,
+            z: zp,
+        };
+        if wp == T::from_f64(1.0).unwrap() {
+            (p, error)
+        } else {
+            (p / wp, error)
+        }
+    }
+
+    fn calc_x_abs_sum(x: &T, y: &T, z: &T, m: [[T; 4]; 4]) -> T {
+        Float::abs(m[0][0] * *x)
+            + Float::abs(m[0][1] * *y)
+            + Float::abs(m[0][2] * *z)
+            + Float::abs(m[0][3])
+    }
+
+    fn calc_y_abs_sum(x: &T, y: &T, z: &T, m: [[T; 4]; 4]) -> T {
+        Float::abs(m[1][0] * *x)
+            + Float::abs(m[1][1] * *y)
+            + Float::abs(m[1][2] * *z)
+            + Float::abs(m[1][3])
+    }
+
+    fn calc_z_abs_sum(x: &T, y: &T, z: &T, m: [[T; 4]; 4]) -> T {
+        Float::abs(m[2][0] * *x)
+            + Float::abs(m[2][1] * *y)
+            + Float::abs(m[2][2] * *z)
+            + Float::abs(m[2][3])
+    }
+
+    pub fn transform_vector(self, vector: Vector3<T>) -> Vector3<T> {
+        self(vector)
     }
 
     pub fn transform_vector_with_error(self, vector: Vector3<T>) -> (Vector3<T>, Vector3<T>) {
@@ -346,6 +437,32 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug + Signed> Transf
         };
 
         (r, origin_error, direction_error)
+    }
+
+    pub fn transform_surface_interaction(self, si: SurfaceInteraction<T>) -> SurfaceInteraction<T> {
+        let (point, error) = self.transform_point_with_errors(si.point(), si.error());
+
+        SurfaceInteraction {
+            interaction: CommonInteraction {
+                point,
+                time: si.time(),
+                error,
+                wo: self(si.wo()).normalize(),
+                normal: self(si.normal()).normalize(),
+            },
+            uv: si.uv,
+            dpdu: self(si.dpdu),
+            dpdv: self(si.dpdv),
+            dndu: self(si.dndu),
+            dndv: self(si.dndv),
+            shading: Shading {
+                n: self(si.shading.n),
+                dpdu: self(si.shading.dpdu),
+                dpdv: self(si.shading.dpdv),
+                dndu: self(si.shading.dndu),
+                dndv: self(si.shading.dndv),
+            },
+        }
     }
 
     /// Tells if a transformatin will swap the handedness of a coordinate system
@@ -411,37 +528,16 @@ impl<T: Float + FromPrimitive> PartialOrd for Transform<T> {
 ///
 /// assert_eq!(expected, t(p));
 /// ```
-impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> Fn<(Point3<T>,)> for Transform<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug + Signed> Fn<(Point3<T>,)>
+    for Transform<T>
+{
     extern "rust-call" fn call(&self, args: (Point3<T>,)) -> Point3<T> {
         let point = args.0;
-        let x = point.x;
-        let y = point.y;
-        let z = point.z;
-        let m = self.matrix.m;
-
-        let xp = m[0][0] * x + m[0][1] * y + m[0][2] * z + m[0][3];
-        let yp = m[1][0] * x + m[1][1] * y + m[1][2] * z + m[1][3];
-        let zp = m[2][0] * x + m[2][1] * y + m[2][2] * z + m[2][3];
-        let wp = m[3][0] * x + m[3][1] * y + m[3][2] * z + m[3][3];
-
-        assert_ne!(wp, T::from_f64(0.0).unwrap());
-        if wp == T::from_f64(0.0).unwrap() {
-            Point3 {
-                x: xp,
-                y: yp,
-                z: zp,
-            }
-        } else {
-            Point3 {
-                x: xp,
-                y: yp,
-                z: zp,
-            } / wp
-        }
+        self.transform_point(point)
     }
 }
 
-impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> FnMut<(Point3<T>,)>
+impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug + Signed> FnMut<(Point3<T>,)>
     for Transform<T>
 {
     extern "rust-call" fn call_mut(&mut self, point: (Point3<T>,)) -> Point3<T> {
@@ -449,7 +545,7 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> FnMut<(Point3<T
     }
 }
 
-impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> FnOnce<(Point3<T>,)>
+impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug + Signed> FnOnce<(Point3<T>,)>
     for Transform<T>
 {
     type Output = Point3<T>;
@@ -587,7 +683,7 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug + Signed> FnOnce
 ///
 /// assert_eq!(actual, expected);
 /// ```
-impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> Fn<(Bounds3<T>,)>
+impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug + Signed> Fn<(Bounds3<T>,)>
     for Transform<T>
 {
     extern "rust-call" fn call(&self, bounds: (Bounds3<T>,)) -> Bounds3<T> {
@@ -637,7 +733,7 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> Fn<(Bounds3<T>,
     }
 }
 
-impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> FnMut<(Bounds3<T>,)>
+impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug + Signed> FnMut<(Bounds3<T>,)>
     for Transform<T>
 {
     extern "rust-call" fn call_mut(&mut self, bounds: (Bounds3<T>,)) -> Bounds3<T> {
@@ -645,7 +741,7 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> FnMut<(Bounds3<
     }
 }
 
-impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> FnOnce<(Bounds3<T>,)>
+impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug + Signed> FnOnce<(Bounds3<T>,)>
     for Transform<T>
 {
     type Output = Bounds3<T>;
@@ -655,7 +751,7 @@ impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> FnOnce<(Bounds3
     }
 }
 
-impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug> Mul for Transform<T> {
+impl<T: Float + FromPrimitive + AsPrimitive<f64> + Copy + Debug + Signed> Mul for Transform<T> {
     type Output = Transform<T>;
 
     fn mul(self, other: Self) -> Self::Output {
