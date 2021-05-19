@@ -1,3 +1,9 @@
+use std::f64::consts::PI;
+use std::ops::AddAssign;
+
+use num::clamp;
+use num::traits::FloatConst;
+
 use crate::foundation::efloat::EFloat;
 use crate::foundation::geometry::bounds::Bounds3;
 use crate::foundation::geometry::normal::Normal3;
@@ -9,9 +15,6 @@ use crate::foundation::shapes::shape::{Intersection, Shape};
 use crate::foundation::shapes::surface_interaction::SurfaceInteraction;
 use crate::foundation::transform::transform::Transform;
 use crate::foundation::util::{gamma, quadratic, quadratic_ef};
-use num_traits::{clamp, FloatConst};
-use std::f64::consts::PI;
-use std::ops::AddAssign;
 
 #[derive(Copy, Clone)]
 struct Sphere {

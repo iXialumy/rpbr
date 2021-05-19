@@ -4,6 +4,7 @@ use crate::foundation::geometry::point::Point3;
 use crate::foundation::geometry::ray::Ray;
 use crate::foundation::geometry::vector::Vector3;
 use crate::foundation::pbr::Float;
+use crate::foundation::util::gamma;
 use std::mem::swap;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -140,15 +141,14 @@ impl Bounds3 {
         Some((t0, t1))
     }
 
-    pub fn intersect_p_precomp(self, ray: Ray, inv_dir: &Vector3, dir_is_neg: Box<[i32]>) -> bool {
+    pub fn intersect_p_precomp(self, ray: Ray, inv_dir: &Vector3, dir_is_neg: [i32; 3]) -> bool {
         let mut t_min = (self[dir_is_neg[0]].x - ray.origin.x) * inv_dir.x;
         let mut t_max = (self[1 - dir_is_neg[0]].x - ray.origin.x) * inv_dir.x;
         let mut ty_min = (self[dir_is_neg[1]].y - ray.origin.y) * inv_dir.y;
         let mut ty_max = (self[1 - dir_is_neg[1]].y - ray.origin.y) * inv_dir.y;
 
-        // TODO comment in when gamma will be implemented
-        // t_max = t_max * (1.0 + T::from_f64(2.0).unwrap() * gamma(3.0));
-        // ty_max = ty_max * (1.0 + T::from_f64(2.0).unwrap() * gamma(3.0));
+        t_max *= 1.0 + 2.0 * gamma(3.0);
+        ty_max *= 1.0 + 2.0 * gamma(3.0);
 
         if t_min > t_max || ty_min > t_max {
             return false;

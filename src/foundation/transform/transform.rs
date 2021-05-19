@@ -14,7 +14,7 @@ use crate::foundation::shapes::surface_interaction::{
 };
 use crate::foundation::transform::matrix::Matrix4x4;
 use crate::foundation::util::gamma;
-use num_traits::abs;
+use num::abs;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Transform {
@@ -537,9 +537,9 @@ impl Fn<(Ray,)> for Transform {
         let length_squared = direction.length_squared();
         let mut max_length = ray.max_length;
         if length_squared > 0.0 {
-            let dt = Vector3::dot(&direction.abs(), o_error) / length_squared;
+            let dt = Vector3::dot(&(Vector3::abs(direction)), o_error) / length_squared;
             origin = origin + (direction * dt);
-            max_length = max_length - dt;
+            max_length -= dt;
         }
 
         Ray {

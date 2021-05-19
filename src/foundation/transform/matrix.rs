@@ -109,7 +109,7 @@ impl Matrix4x4 {
             let pivinv = 1.0 / minv[icol][icol];
             minv[icol][icol] = 1.0;
             for j in 0..4 {
-                minv[icol][j] = minv[icol][j] * pivinv;
+                minv[icol][j] *= pivinv;
             }
 
             // Subtract this row from others to zero out their columns
@@ -118,7 +118,7 @@ impl Matrix4x4 {
                     let save = minv[j][icol];
                     minv[j][icol] = 0.0;
                     for k in 0..4 {
-                        minv[j][k] = minv[j][k] - minv[icol][k] * save
+                        minv[j][k] -= minv[icol][k] * save
                     }
                 }
             }

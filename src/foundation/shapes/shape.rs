@@ -1,5 +1,3 @@
-use std::fmt::Debug;
-
 use crate::foundation::geometry::bounds::Bounds3;
 use crate::foundation::geometry::ray::Ray;
 use crate::foundation::pbr::Float;
