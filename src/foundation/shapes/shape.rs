@@ -16,6 +16,6 @@ pub trait Shape: Copy {
         (self.object_to_world())(self.object_bounds())
     }
     fn area(&self) -> Float;
-    fn intersect(&self, ray: Ray) -> Option<Intersection>;
+    fn intersect(&self, ray: Ray, test_alpha_texture: bool) -> Option<Intersection>;
     fn intersect_p(&self, ray: Ray, test_alpha_texture: bool) -> bool;
 }

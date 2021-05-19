@@ -14,7 +14,7 @@ use crate::foundation::pbr::Float;
 use crate::foundation::shapes::shape::{Intersection, Shape};
 use crate::foundation::shapes::surface_interaction::SurfaceInteraction;
 use crate::foundation::transform::transform::Transform;
-use crate::foundation::util::{gamma, quadratic, quadratic_ef};
+use crate::foundation::util::{gamma, quadratic_ef};
 
 #[derive(Copy, Clone)]
 struct Sphere {
@@ -76,85 +76,8 @@ impl Shape for Sphere {
         todo!()
     }
 
-    fn intersect(&self, ray: Ray) -> Option<Intersection> {
-        let (ray_obj, o_err, d_err) = self.world_to_object.transform_ray_with_error(ray);
-
-        // Initialize _EFloat_ ray coordinate values
-        let ox = EFloat::new(ray_obj.origin.x, o_err.x);
-        let oy = EFloat::new(ray_obj.origin.y, o_err.y);
-        let oz = EFloat::new(ray_obj.origin.z, o_err.z);
-        let dx = EFloat::new(ray_obj.direction.x, d_err.x);
-        let dy = EFloat::new(ray_obj.direction.y, d_err.y);
-        let dz = EFloat::new(ray_obj.direction.z, d_err.z);
-
-        let a = dx * dx + dy * dy + dz * dz;
-        let b = (dx * ox + dy * oy + dz * oz) * 2.0;
-        let c = ox * ox + oy * oy + oz * oz - EFloat::from(self.radius) * EFloat::from(self.radius);
-
-        // Solve quadratic equation for _t_ values
-        let option = quadratic_ef(a, b, c);
-        if option == None {
-            return None;
-        }
-        let (t0, t1) = option.unwrap();
-
-        // Check quadratic shape _t0_ and _t1_ for nearest intersection
-        if t0.upper_bound() > ray_obj.max_length || t1.lower_bound() <= 0.0 {
-            return None;
-        }
-        let mut t_shape_hit = t0;
-        if t_shape_hit.lower_bound() < 0.0 {
-            t_shape_hit = t1;
-            if t_shape_hit.upper_bound() > ray_obj.max_length {
-                return None;
-            }
-        }
-
-        // Compute sphere hit position and phi
-        let mut p_hit = ray_obj.at(t_shape_hit.value());
-
-        // Refine sphere intersection point
-        p_hit *= self.radius / p_hit.distance(Point3::zero());
-        if p_hit.x == 0.0 && p_hit.y == 0.0 {
-            p_hit.x = 1e-5 * self.radius;
-        }
-        let mut phi = Float::atan2(p_hit.y, p_hit.x);
-        if phi < 0.0 {
-            phi += 2.0 * Float::PI()
-        }
-
-        // Test sphere intersection against clipping parameters
-        if (self.z_min > -self.radius && p_hit.z < self.z_min)
-            || (self.z_max < self.radius && p_hit.z > self.z_max)
-            || phi > self.phi_max
-        {
-            if t_shape_hit == t1 {
-                return None;
-            }
-            if t1.upper_bound() > ray_obj.max_length {
-                return None;
-            }
-            t_shape_hit = t1;
-
-            //Compute sphere hit position and phi
-            p_hit = ray_obj.at(t_shape_hit.value());
-
-            // Refine sphere intersection point
-            p_hit *= self.radius / p_hit.distance(Point3::zero());
-            if p_hit.x == 0.0 && p_hit.y == 0.0 {
-                p_hit.x = 1e-5 * self.radius;
-            }
-            let mut phi = Float::atan2(p_hit.y, p_hit.x);
-            if phi < 0.0 {
-                phi += 2.0 * Float::PI()
-            }
-            if (self.z_min > -self.radius && p_hit.z < self.z_min)
-                || (self.z_max < self.radius && p_hit.z > self.z_max)
-                || phi > self.phi_max
-            {
-                return None;
-            }
-        }
+    fn intersect(&self, ray: Ray, _test_alpha_texture: bool) -> Option<Intersection> {
+        let (t_shape_hit, p_hit, phi) = self.intersect_common(ray)?;
 
         // Find parametric representation of sphere hit
         let u = phi / self.phi_max;
@@ -240,7 +163,91 @@ impl Shape for Sphere {
         })
     }
 
-    fn intersect_p(&self, ray: Ray, test_alpha_texture: bool) -> bool {
-        todo!()
+    fn intersect_p(&self, ray: Ray, _test_alpha_texture: bool) -> bool {
+        self.intersect_common(ray).is_some()
+    }
+}
+
+impl Sphere {
+    fn intersect_common(&self, ray: Ray) -> Option<(EFloat, Point3, f32)> {
+        let (ray_obj, o_err, d_err) = self.world_to_object.transform_ray_with_error(ray);
+
+        // Initialize _EFloat_ ray coordinate values
+        let ox = EFloat::new(ray_obj.origin.x, o_err.x);
+        let oy = EFloat::new(ray_obj.origin.y, o_err.y);
+        let oz = EFloat::new(ray_obj.origin.z, o_err.z);
+        let dx = EFloat::new(ray_obj.direction.x, d_err.x);
+        let dy = EFloat::new(ray_obj.direction.y, d_err.y);
+        let dz = EFloat::new(ray_obj.direction.z, d_err.z);
+
+        let a = dx * dx + dy * dy + dz * dz;
+        let b = (dx * ox + dy * oy + dz * oz) * 2.0;
+        let c = ox * ox + oy * oy + oz * oz - EFloat::from(self.radius) * EFloat::from(self.radius);
+
+        // Solve quadratic equation for _t_ values
+        let option = quadratic_ef(a, b, c);
+        if option == None {
+            return None;
+        }
+        let (t0, t1) = option.unwrap();
+
+        // Check quadratic shape _t0_ and _t1_ for nearest intersection
+        if t0.upper_bound() > ray_obj.max_length || t1.lower_bound() <= 0.0 {
+            return None;
+        }
+        let mut t_shape_hit = t0;
+        if t_shape_hit.lower_bound() < 0.0 {
+            t_shape_hit = t1;
+            if t_shape_hit.upper_bound() > ray_obj.max_length {
+                return None;
+            }
+        }
+
+        // Compute sphere hit position and phi
+        let mut p_hit = ray_obj.at(t_shape_hit.value());
+
+        // Refine sphere intersection point
+        p_hit *= self.radius / p_hit.distance(Point3::zero());
+        if p_hit.x == 0.0 && p_hit.y == 0.0 {
+            p_hit.x = 1e-5 * self.radius;
+        }
+        let mut phi = Float::atan2(p_hit.y, p_hit.x);
+        if phi < 0.0 {
+            phi += 2.0 * Float::PI()
+        }
+
+        // Test sphere intersection against clipping parameters
+        if (self.z_min > -self.radius && p_hit.z < self.z_min)
+            || (self.z_max < self.radius && p_hit.z > self.z_max)
+            || phi > self.phi_max
+        {
+            if t_shape_hit == t1 {
+                return None;
+            }
+            if t1.upper_bound() > ray_obj.max_length {
+                return None;
+            }
+            t_shape_hit = t1;
+
+            //Compute sphere hit position and phi
+            p_hit = ray_obj.at(t_shape_hit.value());
+
+            // Refine sphere intersection point
+            p_hit *= self.radius / p_hit.distance(Point3::zero());
+            if p_hit.x == 0.0 && p_hit.y == 0.0 {
+                p_hit.x = 1e-5 * self.radius;
+            }
+            let mut phi = Float::atan2(p_hit.y, p_hit.x);
+            if phi < 0.0 {
+                phi += 2.0 * Float::PI()
+            }
+            if (self.z_min > -self.radius && p_hit.z < self.z_min)
+                || (self.z_max < self.radius && p_hit.z > self.z_max)
+                || phi > self.phi_max
+            {
+                return None;
+            }
+        }
+        Some((t_shape_hit, p_hit, phi))
     }
 }
