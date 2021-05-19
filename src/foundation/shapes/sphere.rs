@@ -73,7 +73,7 @@ impl Shape for Sphere {
     }
 
     fn area(&self) -> Float {
-        todo!()
+        self.phi_max * self.radius * (self.z_max - self.z_min)
     }
 
     fn intersect(&self, ray: Ray, _test_alpha_texture: bool) -> Option<Intersection> {
