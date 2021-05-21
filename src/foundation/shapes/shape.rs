@@ -2,7 +2,7 @@ use crate::foundation::geometry::bounds::Bounds3;
 use crate::foundation::geometry::ray::Ray;
 use crate::foundation::pbr::Float;
 use crate::foundation::shapes::surface_interaction::SurfaceInteraction;
-use crate::foundation::transform::transform::Transform;
+use crate::foundation::transforms::transform::Transform;
 
 pub struct Intersection {
     pub interaction: SurfaceInteraction,

@@ -1,6 +1,7 @@
-use crate::foundation::pbr::Float;
 use std::cmp::Ordering;
 use std::ops::{Add, Div, Mul, Sub};
+
+use crate::foundation::pbr::Float;
 
 #[derive(Copy, Clone)]
 pub(crate) struct EFloat {
@@ -157,43 +158,10 @@ impl PartialOrd for EFloat {
     }
 }
 
-fn next_float_up(f: Float) -> Float {
-    unimplemented!()
+pub fn next_float_up(f: Float) -> Float {
+    unimplemented!("EFloat::next_float_up({})", f)
 }
 
 fn next_float_down(f: Float) -> Float {
-    unimplemented!()
-}
-
-fn quadratic(a: EFloat, b: EFloat, c: EFloat) -> Option<(EFloat, EFloat)> {
-    let av = a.value as f64;
-    let bv = b.value as f64;
-    let cv = c.value as f64;
-
-    let discrim = bv * bv - 4.0 * av * cv;
-
-    if discrim < 0.0 {
-        return None;
-    }
-
-    let root_discrim = discrim.sqrt();
-    let float_root_discrim = EFloat::new(
-        root_discrim as Float,
-        (f64::EPSILON * root_discrim) as Float,
-    );
-
-    let q = EFloat::from(-0.5)
-        * (if b.value < 0.0 {
-            b - float_root_discrim
-        } else {
-            b + float_root_discrim
-        });
-
-    let t0 = q / a;
-    let t1 = c / q;
-    if t0 < t1 {
-        Some((t0, t1))
-    } else {
-        Some((t1, t0))
-    }
+    unimplemented!("EFloat::next_float_down({})", f)
 }

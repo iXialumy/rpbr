@@ -1,6 +1,7 @@
-use crate::foundation::pbr::Float;
 use std::ops::Mul;
 use std::ptr::swap;
+
+use crate::foundation::pbr::Float;
 
 #[derive(Debug, Copy, Clone, PartialOrd, PartialEq)]
 pub struct Matrix4x4 {
@@ -77,8 +78,8 @@ impl Matrix4x4 {
             // Choose pivot
             for j in 0..4 {
                 if ipiv[j] != 1 {
-                    for k in 0..4 {
-                        if ipiv[k] == 0 {
+                    for (k, &pivot) in ipiv.iter().enumerate() {
+                        if pivot == 0 {
                             if minv[j][k].abs() >= big {
                                 big = (minv[j][k]).abs();
                                 irow = j;
@@ -124,7 +125,7 @@ impl Matrix4x4 {
             }
         }
         // Swap columns to reflect permutation
-
+        #[allow(clippy::needless_range_loop)]
         for j in (0..4).rev() {
             if indxr[j] != indxc[j] {
                 for k in 0..4 {
@@ -151,6 +152,7 @@ impl Matrix4x4 {
 impl Mul for Matrix4x4 {
     type Output = Self;
 
+    #[allow(clippy::needless_range_loop)]
     fn mul(self, rhs: Self) -> Self::Output {
         let mut array: [[Float; 4]; 4] = Matrix4x4::identity().m;
         for i in 0..4 {
@@ -173,7 +175,7 @@ impl From<[[Float; 4]; 4]> for Matrix4x4 {
 
 #[cfg(test)]
 mod tests {
-    use crate::foundation::transform::matrix::Matrix4x4;
+    use crate::foundation::transforms::matrix::Matrix4x4;
 
     #[test]
     pub fn invert_matrix() {

@@ -1,3 +1,4 @@
+use std::mem::swap;
 use std::ops::Index;
 
 use crate::foundation::geometry::point::Point3;
@@ -5,7 +6,6 @@ use crate::foundation::geometry::ray::Ray;
 use crate::foundation::geometry::vector::Vector3;
 use crate::foundation::pbr::Float;
 use crate::foundation::util::gamma;
-use std::mem::swap;
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct Bounds3 {
@@ -59,6 +59,7 @@ impl Bounds3 {
         }
     }
 
+    #[allow(clippy::suspicious_operation_groupings)]
     pub fn overlaps(self, other: Self) -> bool {
         let x = (self.p_max.x >= other.p_min.x) && (self.p_min.x <= self.p_max.x);
         let y = (self.p_max.y >= other.p_min.y) && (self.p_min.y <= self.p_max.y);
@@ -128,8 +129,7 @@ impl Bounds3 {
                 swap(&mut t_near, &mut t_far);
             }
 
-            // TODO comment in when gamma will be implemented
-            // t_far = t_far * (1.0 + T::from_f64(2.0).unwrap() * gamma(3.0));
+            t_far *= 1.0 + 2.0 * gamma(3.0);
             t0 = if t_near > t0 { t_near } else { t0 };
             t1 = if t_far < t1 { t_far } else { t1 };
 
@@ -144,7 +144,7 @@ impl Bounds3 {
     pub fn intersect_p_precomp(self, ray: Ray, inv_dir: &Vector3, dir_is_neg: [i32; 3]) -> bool {
         let mut t_min = (self[dir_is_neg[0]].x - ray.origin.x) * inv_dir.x;
         let mut t_max = (self[1 - dir_is_neg[0]].x - ray.origin.x) * inv_dir.x;
-        let mut ty_min = (self[dir_is_neg[1]].y - ray.origin.y) * inv_dir.y;
+        let ty_min = (self[dir_is_neg[1]].y - ray.origin.y) * inv_dir.y;
         let mut ty_max = (self[1 - dir_is_neg[1]].y - ray.origin.y) * inv_dir.y;
 
         t_max *= 1.0 + 2.0 * gamma(3.0);
@@ -160,11 +160,10 @@ impl Bounds3 {
             t_max = ty_max;
         }
 
-        let mut tz_min = (self[dir_is_neg[2]].z - ray.origin.z) * inv_dir.z;
+        let tz_min = (self[dir_is_neg[2]].z - ray.origin.z) * inv_dir.z;
         let mut tz_max = (self[1 - dir_is_neg[2]].z - ray.origin.z) * inv_dir.z;
 
-        // TODO comment in when gamma will be implemented
-        // tz_max = tz_max * (1.0 + T::from_f64(2.0).unwrap() * gamma(3.0));
+        tz_max = tz_max * (1.0 + 2.0) * gamma(3.0);
 
         if t_min > tz_max || tz_min > t_max {
             return false;

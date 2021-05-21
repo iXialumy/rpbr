@@ -2,6 +2,8 @@ use std::cmp::Ordering;
 use std::fmt::Debug;
 use std::ops::Mul;
 
+use num::abs;
+
 use crate::foundation::geometry::bounds::Bounds3;
 use crate::foundation::geometry::normal::Normal3;
 use crate::foundation::geometry::point::Point3;
@@ -12,9 +14,8 @@ use crate::foundation::shapes::interaction::Interaction;
 use crate::foundation::shapes::surface_interaction::{
     CommonInteraction, Shading, SurfaceInteraction,
 };
-use crate::foundation::transform::matrix::Matrix4x4;
+use crate::foundation::transforms::matrix::Matrix4x4;
 use crate::foundation::util::gamma;
-use num::abs;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Transform {
@@ -23,7 +24,7 @@ pub struct Transform {
 }
 
 impl Transform {
-    /// Create a transform with the identity matrix
+    /// Create a transforms with the identity matrix
     pub fn identity() -> Self {
         Self {
             matrix: Matrix4x4::identity(),
@@ -181,6 +182,7 @@ impl Transform {
         }
     }
 
+    #[allow(clippy::float_cmp)]
     pub fn transform_point(self, point: Point3) -> Point3 {
         let x = point.x;
         let y = point.y;
@@ -208,6 +210,8 @@ impl Transform {
         }
     }
 
+    #[allow(clippy::many_single_char_names)]
+    #[allow(clippy::float_cmp)]
     pub fn transform_point_with_error(self, point: Point3) -> (Point3, Vector3) {
         let x = point.x;
         let y = point.y;
@@ -239,6 +243,8 @@ impl Transform {
         }
     }
 
+    #[allow(clippy::many_single_char_names)]
+    #[allow(clippy::float_cmp)]
     pub fn transform_point_with_errors(self, point: Point3, error: Vector3) -> (Point3, Vector3) {
         let x = point.x;
         let y = point.y;
@@ -421,8 +427,8 @@ impl PartialOrd for Transform {
 /// ```
 /// #![feature(fn_traits)]
 /// use rpbr::foundation::geometry::point::Point3;
-/// use rpbr::foundation::transform::matrix::Matrix4x4;
-/// use rpbr::foundation::transform::transform::Transform;
+/// use rpbr::foundation::transforms::matrix::Matrix4x4;
+/// use rpbr::foundation::transforms::transform::Transform;
 /// let p = Point3 {
 ///     x: 1.0,
 ///     y: 2.0,
@@ -572,7 +578,7 @@ impl FnOnce<(Ray,)> for Transform {
 /// ```
 /// use rpbr::foundation::geometry::bounds::Bounds3;
 /// use rpbr::foundation::geometry::point::Point3;
-/// use rpbr::foundation::transform::transform::Transform;
+/// use rpbr::foundation::transforms::transform::Transform;
 ///
 /// let bounds = Bounds3::new(Point3::zero(), Point3::new(1.0, 2.0, 3.0));
 /// let transform = &Transform::scale(1.0, 1.0, 1.0);
@@ -657,8 +663,8 @@ impl Mul for Transform {
 
 #[cfg(test)]
 mod tests {
-    use crate::foundation::transform::matrix::Matrix4x4;
-    use crate::foundation::transform::transform::Transform;
+    use crate::foundation::transforms::matrix::Matrix4x4;
+    use crate::foundation::transforms::transform::Transform;
 
     #[test]
     pub fn new() {

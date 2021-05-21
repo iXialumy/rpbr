@@ -1,6 +1,3 @@
-use std::f64::consts::PI;
-use std::ops::AddAssign;
-
 use num::clamp;
 use num::traits::FloatConst;
 
@@ -13,7 +10,7 @@ use crate::foundation::geometry::vector::Vector3;
 use crate::foundation::pbr::Float;
 use crate::foundation::shapes::shape::{Intersection, Shape};
 use crate::foundation::shapes::surface_interaction::SurfaceInteraction;
-use crate::foundation::transform::transform::Transform;
+use crate::foundation::transforms::transform::Transform;
 use crate::foundation::util::{gamma, quadratic_ef};
 
 #[derive(Copy, Clone)]
@@ -76,6 +73,9 @@ impl Shape for Sphere {
         self.phi_max * self.radius * (self.z_max - self.z_min)
     }
 
+    #[allow(clippy::many_single_char_names)]
+    #[allow(non_snake_case)]
+    #[allow(clippy::suspicious_operation_groupings)]
     fn intersect(&self, ray: Ray, _test_alpha_texture: bool) -> Option<Intersection> {
         let (t_shape_hit, p_hit, phi) = self.intersect_common(ray)?;
 
@@ -169,6 +169,7 @@ impl Shape for Sphere {
 }
 
 impl Sphere {
+    #[allow(clippy::suspicious_operation_groupings)]
     fn intersect_common(&self, ray: Ray) -> Option<(EFloat, Point3, f32)> {
         let (ray_obj, o_err, d_err) = self.world_to_object.transform_ray_with_error(ray);
 

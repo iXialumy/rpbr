@@ -1,6 +1,7 @@
+use std::mem::swap;
+
 use crate::foundation::efloat::EFloat;
 use crate::foundation::pbr::Float;
-use std::mem::swap;
 
 pub fn gamma(n: Float) -> Float {
     (n * Float::EPSILON) / (1.0 - n * Float::EPSILON)
@@ -19,7 +20,7 @@ pub fn quadratic(a: Float, b: Float, c: Float) -> Option<(Float, Float)> {
     let root_discrim = discrim.sqrt();
 
     // Compute quadratic _t_ values
-    let mut q = 0.0;
+    let q;
     if b < 0.0 {
         q = -0.5 * (b - root_discrim);
     } else {
@@ -49,7 +50,7 @@ pub(crate) fn quadratic_ef(a: EFloat, b: EFloat, c: EFloat) -> Option<(EFloat, E
     let float_root_discrim = EFloat::new(root_discrim, Float::EPSILON * root_discrim);
 
     // Compute quadratic _t_ values
-    let mut q = EFloat::zero();
+    let q;
     if b64 < 0.0 {
         q = EFloat::from(-0.5) * (b - float_root_discrim);
     } else {

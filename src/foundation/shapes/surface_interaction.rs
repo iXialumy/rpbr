@@ -31,6 +31,7 @@ pub struct SurfaceInteraction {
 }
 
 impl SurfaceInteraction {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         p: Point3,
         p_error: Vector3,
