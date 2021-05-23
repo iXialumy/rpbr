@@ -15,35 +15,35 @@ pub enum Shape {
 }
 
 impl Shape {
-    fn object_to_world(self) -> Transform {
+    pub fn object_to_world(self) -> Transform {
         match self {
             Shape::Sphr(shape) => shape.object_to_world(),
         }
     }
 
-    fn object_bounds(self) -> Bounds3 {
+    pub fn object_bounds(self) -> Bounds3 {
         match self {
             Shape::Sphr(shape) => shape.object_bounds(),
         }
     }
 
-    fn world_bounds(self) -> Bounds3 {
+    pub fn world_bounds(self) -> Bounds3 {
         (self.object_to_world())(self.object_bounds())
     }
 
-    fn area(&self) -> Float {
+    pub fn area(&self) -> Float {
         match self {
             Shape::Sphr(shape) => shape.area(),
         }
     }
 
-    fn intersect(&self, ray: Ray, test_alpha_texture: bool) -> Option<Intersection> {
+    pub fn intersect(&self, ray: Ray, test_alpha_texture: bool) -> Option<Intersection> {
         match self {
             Shape::Sphr(shape) => shape.intersect(ray, test_alpha_texture),
         }
     }
 
-    fn intersect_p(&self, ray: Ray, test_alpha_texture: bool) -> bool {
+    pub fn intersect_p(&self, ray: Ray, test_alpha_texture: bool) -> bool {
         match self {
             Shape::Sphr(shape) => shape.intersect_p(ray, test_alpha_texture),
         }
