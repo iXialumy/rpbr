@@ -8,13 +8,13 @@ use crate::foundation::geometry::point::{Point2, Point3};
 use crate::foundation::geometry::ray::Ray;
 use crate::foundation::geometry::vector::Vector3;
 use crate::foundation::pbr::Float;
-use crate::foundation::shapes::shape::{Intersection, Shape};
+use crate::foundation::shapes::shape::Intersection;
 use crate::foundation::shapes::surface_interaction::SurfaceInteraction;
 use crate::foundation::transforms::transform::Transform;
 use crate::foundation::util::{gamma, quadratic_ef};
 
 #[derive(Copy, Clone)]
-struct Sphere {
+pub struct Sphere {
     radius: Float,
     z_min: Float,
     z_max: Float,
@@ -25,8 +25,9 @@ struct Sphere {
     world_to_object: Transform,
     object_to_world: Transform,
 }
+
 impl Sphere {
-    fn new(
+    pub fn new(
         object_to_world: Transform,
         world_to_object: Transform,
         reverse_orientation: bool,
@@ -47,14 +48,12 @@ impl Sphere {
             object_to_world,
         }
     }
-}
 
-impl Shape for Sphere {
-    fn object_to_world(self) -> Transform {
+    pub fn object_to_world(self) -> Transform {
         self.object_to_world
     }
 
-    fn object_bounds(self) -> Bounds3 {
+    pub fn object_bounds(self) -> Bounds3 {
         Bounds3 {
             p_min: Point3 {
                 x: -self.radius,
@@ -69,14 +68,14 @@ impl Shape for Sphere {
         }
     }
 
-    fn area(&self) -> Float {
+    pub fn area(&self) -> Float {
         self.phi_max * self.radius * (self.z_max - self.z_min)
     }
 
     #[allow(clippy::many_single_char_names)]
     #[allow(non_snake_case)]
     #[allow(clippy::suspicious_operation_groupings)]
-    fn intersect(&self, ray: Ray, _test_alpha_texture: bool) -> Option<Intersection> {
+    pub fn intersect(&self, ray: Ray, _test_alpha_texture: bool) -> Option<Intersection> {
         let (t_shape_hit, p_hit, phi) = self.intersect_common(ray)?;
 
         // Find parametric representation of sphere hit
@@ -163,12 +162,10 @@ impl Shape for Sphere {
         })
     }
 
-    fn intersect_p(&self, ray: Ray, _test_alpha_texture: bool) -> bool {
+    pub fn intersect_p(&self, ray: Ray, _test_alpha_texture: bool) -> bool {
         self.intersect_common(ray).is_some()
     }
-}
 
-impl Sphere {
     #[allow(clippy::suspicious_operation_groupings)]
     fn intersect_common(&self, ray: Ray) -> Option<(EFloat, Point3, f32)> {
         let (ray_obj, o_err, d_err) = self.world_to_object.transform_ray_with_error(ray);
